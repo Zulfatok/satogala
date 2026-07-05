@@ -1165,6 +1165,7 @@ const PAGES = {
             const t = await r.text().catch(()=> '');
             throw new Error('Server returned non-JSON ('+r.status+'): ' + (t ? t.slice(0,200) : ''));
           }
+          j.status = r.status;
           return j;
         }
 
@@ -1187,14 +1188,27 @@ const PAGES = {
         }
 
         async function loadMe(){
-          const j = await api('/api/me');
-          if(!j.ok){ location.href='/login'; return; }
-          ME=j.user;
-          document.getElementById('me').innerHTML =
-            '<div><b>'+esc(ME.username)+'</b> <span class="muted">('+esc(ME.email)+')</span></div>'+
-            '<div class="muted" style="margin-top:4px">role: '+esc(ME.role)+'</div>';
-          document.getElementById('limitInfo').textContent = 'limit: '+ME.alias_limit;
-          if(ME.role==='admin') document.getElementById('adminLink').style.display='inline-flex';
+          const meBox = document.getElementById('me');
+          try{
+            const j = await api('/api/me');
+            if(!j.ok){
+              meBox.innerHTML = '<span class="muted">Session habis. Mengalihkan ke login...</span>';
+              location.href='/login';
+              return;
+            }
+            ME=j.user;
+            meBox.innerHTML =
+              '<div><b>'+esc(ME.username)+'</b> <span class="muted">('+esc(ME.email)+')</span></div>'+
+              '<div class="muted" style="margin-top:4px">role: '+esc(ME.role)+'</div>';
+            document.getElementById('limitInfo').textContent = 'limit: '+ME.alias_limit;
+            if(ME.role==='admin') document.getElementById('adminLink').style.display='inline-flex';
+          }catch(e){
+            meBox.innerHTML =
+              '<div style="color:#fca5a5;font-weight:700">Gagal load akun</div>'+
+              '<div class="muted" style="margin-top:4px">'+esc(e && e.message ? e.message : String(e))+'</div>'+
+              '<div style="margin-top:8px"><a class="pill" href="/login">Login ulang</a></div>';
+            throw e;
+          }
         }
 
         async function loadAliases(){
@@ -1331,7 +1345,7 @@ const PAGES = {
               '<button class="btn-ghost" onclick="loadEmails()">Refresh</button>'+
               '</div>'+
               '<div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px">'+
-                '<input id="emailSearch" placeholder="Cari subject, pengirim, atau isi pesan..." value="'+esc(SEARCH_QUERY)+'" oninput="setSearchQuery(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();setSearchQuery(this.value,true)}" />'+
+                '<input id="emailSearch" placeholder="Cari subject, pengirim, atau isi pesan..." value="'+esc(SEARCH_QUERY)+'" oninput="setSearchQuery(this.value)" onkeydown="if(event.key===&quot;Enter&quot;){event.preventDefault();setSearchQuery(this.value,true)}" />'+
                 '<button class="btn-ghost" onclick="clearEmailSearch()">Clear</button>'+
               '</div>'+
               (SEARCH_QUERY ? '<div class="muted" style="font-size:12px;margin-bottom:10px">Hasil pencarian: <span class="kbd">'+esc(SEARCH_QUERY)+'</span></div>' : '')+
@@ -1523,16 +1537,20 @@ const PAGES = {
           const domain = document.getElementById('domainSelect').value;
           const msg=document.getElementById('aliasMsg');
           msg.textContent='...';
-          const j = await api('/api/aliases', {
-            method:'POST',
-            headers:{'content-type':'application/json'},
-            body:JSON.stringify({local, domain})
-          });
-          msg.textContent = j.ok ? 'Mail dibuat.' : (j.error||'gagal');
-          if(j.ok){
-            document.getElementById('alias').value='';
-            await loadMe();
-            await loadAliases();
+          try{
+            const j = await api('/api/aliases', {
+              method:'POST',
+              headers:{'content-type':'application/json'},
+              body:JSON.stringify({local, domain})
+            });
+            msg.textContent = j.ok ? 'Mail dibuat.' : (j.error||'gagal');
+            if(j.ok){
+              document.getElementById('alias').value='';
+              await loadMe();
+              await loadAliases();
+            }
+          }catch(e){
+            msg.textContent = 'Gagal create: ' + (e && e.message ? e.message : String(e));
           }
         }
 
@@ -1673,7 +1691,10 @@ const PAGES = {
             await loadMe();
             await loadAliases();
           }catch(e){
-            alert(String(e && e.message ? e.message : e));
+            const msg = String(e && e.message ? e.message : e);
+            const aliasesBox = document.getElementById('aliases');
+            if(aliasesBox) aliasesBox.innerHTML = '<div class="muted">Gagal memuat halaman: '+esc(msg)+'</div>';
+            console.error('App init error:', e);
           }
         })();
       </script>
@@ -1977,6 +1998,7 @@ const PAGES = {
             const t = await r.text().catch(()=> '');
             throw new Error('Server returned non-JSON ('+r.status+'): ' + (t ? t.slice(0,200) : ''));
           }
+          j.status = r.status;
           return j;
         }
 
