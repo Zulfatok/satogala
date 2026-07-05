@@ -22,7 +22,3 @@ STORE_RAW_EMAILS = "false"
 binding = "DB"
 database_name = "maail_portal"
 database_id = "241525c4-1751-4594-914a-86cc1f8fe07b"
-
-[[r2_buckets]]
-binding = "MAIL_R2"
-bucket_name = "maail-portal-mail2"
