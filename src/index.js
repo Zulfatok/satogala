@@ -1105,6 +1105,17 @@ const PAGES = {
         </div>
       </div>
 
+      <div class="card" id="globalSearchPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <b>Cari Pesan</b>
+          <span class="muted">Semua mail</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px">
+          <input id="globalEmailSearch" placeholder="Cari subject, pengirim, penerima, alias, atau isi pesan..." oninput="setGlobalSearchQuery(this.value)" onkeydown="if(event.key===&quot;Enter&quot;){event.preventDefault();setGlobalSearchQuery(this.value,true)}" />
+          <button class="btn-ghost" onclick="clearGlobalEmailSearch()">Clear</button>
+        </div>
+        <div id="globalSearchResults" style="margin-top:12px"></div>
+      </div>
       <div class="card" id="mailPanel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <b>Mail</b>
@@ -1128,6 +1139,8 @@ const PAGES = {
         let SELECTED_EMAILS=[];
         let SEARCH_QUERY='';
         let SEARCH_TIMER=null;
+        let GLOBAL_SEARCH_QUERY='';
+        let GLOBAL_SEARCH_TIMER=null;
 
         function esc(s){return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
 
@@ -1185,6 +1198,67 @@ const PAGES = {
           SELECTED_EMAILS = [];
           if(SEARCH_TIMER) clearTimeout(SEARCH_TIMER);
           loadEmails();
+        }
+
+        function setGlobalSearchQuery(value, immediate=false){
+          GLOBAL_SEARCH_QUERY = String(value || '').trim();
+          if(GLOBAL_SEARCH_TIMER) clearTimeout(GLOBAL_SEARCH_TIMER);
+          if(immediate){
+            loadGlobalEmails();
+            return;
+          }
+          GLOBAL_SEARCH_TIMER = setTimeout(()=>loadGlobalEmails(), 350);
+        }
+
+        function clearGlobalEmailSearch(){
+          GLOBAL_SEARCH_QUERY = '';
+          if(GLOBAL_SEARCH_TIMER) clearTimeout(GLOBAL_SEARCH_TIMER);
+          const input = document.getElementById('globalEmailSearch');
+          if(input) input.value = '';
+          const box = document.getElementById('globalSearchResults');
+          if(box) box.innerHTML = '';
+        }
+
+        async function loadGlobalEmails(){
+          const box = document.getElementById('globalSearchResults');
+          if(!box) return;
+          const q = GLOBAL_SEARCH_QUERY;
+          if(!q){
+            box.innerHTML = '';
+            return;
+          }
+          box.innerHTML = '<div class="muted">Mencari...</div>';
+          try{
+            const j = await api('/api/emails-search?q='+encodeURIComponent(q));
+            if(!j.ok){
+              box.innerHTML = '<div class="muted">Gagal mencari: '+esc(j.error||'gagal')+'</div>';
+              return;
+            }
+            const emails = j.emails || [];
+            if(!emails.length){
+              box.innerHTML = '<div class="muted" style="padding:14px;border:1px dashed rgba(148,163,184,.3);border-radius:12px">Tidak ada pesan yang cocok.</div>';
+              return;
+            }
+            let html = '<div class="muted" style="font-size:12px;margin-bottom:10px">Hasil pencarian: <span class="kbd">'+esc(q)+'</span></div>';
+            for(const m of emails){
+              const addr = (m.local_part || '') + (m.domain ? '@'+m.domain : '');
+              html += '<div class="mailItem" onclick="openEmail(\\''+m.id+'\\')">'+
+                '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">'+
+                  '<div style="flex:1;min-width:0">'+
+                    '<div class="mailSubject">'+esc(m.subject||'(no subject)')+'</div>'+
+                    '<div class="mailMeta">Mail: '+esc(addr)+'</div>'+
+                    '<div class="mailMeta">From: '+esc(m.from_addr||'')+'</div>'+
+                    '<div class="mailMeta">'+esc(fmtDate(m.date || m.created_at || ""))+'</div>'+
+                    (m.snippet ? '<div class="mailSnippet">'+esc(m.snippet)+'</div>' : '')+
+                  '</div>'+
+                  '<button class="btn-primary" onclick="event.stopPropagation();openEmail(\\''+m.id+'\\')">View</button>'+
+                '</div>'+
+              '</div>';
+            }
+            box.innerHTML = html;
+          }catch(e){
+            box.innerHTML = '<div class="muted">Gagal mencari: '+esc(e && e.message ? e.message : String(e))+'</div>';
+          }
         }
 
         async function loadMe(){
@@ -1413,18 +1487,22 @@ const PAGES = {
 
         function showEmailPanel(){
           const accountPanel = document.getElementById('accountPanel');
+          const globalSearchPanel = document.getElementById('globalSearchPanel');
           const mailPanel = document.getElementById('mailPanel');
           const emailView = document.getElementById('emailView');
           if(accountPanel) accountPanel.style.display = 'none';
+          if(globalSearchPanel) globalSearchPanel.style.display = 'none';
           if(mailPanel) mailPanel.style.display = 'none';
           if(emailView) emailView.style.display = 'block';
         }
 
         function showInboxPanel(){
           const accountPanel = document.getElementById('accountPanel');
+          const globalSearchPanel = document.getElementById('globalSearchPanel');
           const mailPanel = document.getElementById('mailPanel');
           const emailView = document.getElementById('emailView');
           if(accountPanel) accountPanel.style.display = '';
+          if(globalSearchPanel) globalSearchPanel.style.display = '';
           if(mailPanel) mailPanel.style.display = '';
           if(emailView){
             emailView.style.display = 'none';
@@ -1684,6 +1762,8 @@ const PAGES = {
         window.deleteSelectedEmails = deleteSelectedEmails;
         window.setSearchQuery = setSearchQuery;
         window.clearEmailSearch = clearEmailSearch;
+        window.setGlobalSearchQuery = setGlobalSearchQuery;
+        window.clearGlobalEmailSearch = clearGlobalEmailSearch;
         window.logout = logout;
 
         (async ()=>{
@@ -1886,15 +1966,15 @@ const PAGES = {
               <span class="sidebarIcon">📥</span>
               <span>Inbox</span>
             </a>
-            <div class="sidebarItem" id="navUsers" data-section="users">
+            <div class="sidebarItem" id="navUsers" data-section="users" onclick="showSection('users')" role="button" tabindex="0">
               <span class="sidebarIcon">👥</span>
               <span>Users</span>
             </div>
-            <div class="sidebarItem" id="navMessages" data-section="messages">
+            <div class="sidebarItem" id="navMessages" data-section="messages" onclick="showSection('messages')" role="button" tabindex="0">
               <span class="sidebarIcon">📨</span>
               <span>Pesan User</span>
             </div>
-            <div class="sidebarItem" id="navDomains" data-section="domains">
+            <div class="sidebarItem" id="navDomains" data-section="domains" onclick="showSection('domains')" role="button" tabindex="0">
               <span class="sidebarIcon">@</span>
               <span>Domain Settings</span>
             </div>
@@ -2337,7 +2417,7 @@ const PAGES = {
                 '</div>'+
                 '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
                   '<span class="pill">'+(d.can_delete ? 'dashboard' : 'env')+'</span>'+
-                  (d.can_delete ? '<button class="danger" onclick="deleteDomain(\''+encodeURIComponent(d.domain)+'\')">Delete</button>' : '<span class="muted" style="font-size:12px">ubah lewat wrangler.toml</span>')+
+                  (d.can_delete ? '<button class="danger" onclick="deleteDomain(\\''+encodeURIComponent(d.domain)+'\\')">Delete</button>' : '<span class="muted" style="font-size:12px">ubah lewat wrangler.toml</span>')+
                 '</div>'+
               '</div>'+
             '</div>';
@@ -3210,6 +3290,57 @@ export default {
           return json({ ok: true, emails: rows.results || [] });
         }
 
+        if (path === "/api/emails-search" && request.method === "GET") {
+          const searchPattern = sqlLikePattern(url.searchParams.get("q") || "");
+          if (!searchPattern) return json({ ok: true, emails: [] });
+
+          const emailsDomain = await emailsHasDomain(env);
+          const searchWhere = emailsDomain
+            ? `(
+                lower(COALESCE(e.from_addr,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.to_addr,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.subject,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.text,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.html,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.local_part,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.domain,'')) LIKE ? ESCAPE '\\'
+              )`
+            : `(
+                lower(COALESCE(e.from_addr,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.to_addr,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.subject,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.text,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.html,'')) LIKE ? ESCAPE '\\' OR
+                lower(COALESCE(e.local_part,'')) LIKE ? ESCAPE '\\'
+              )`;
+          const searchBinds = emailsDomain
+            ? [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
+            : [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+
+          const rows = emailsDomain
+            ? await env.DB.prepare(
+              `SELECT e.id, e.local_part, e.domain, e.from_addr, e.to_addr, e.subject, e.date, e.created_at,
+                      substr(COALESCE(e.text,''), 1, 220) as snippet
+               FROM emails e
+               WHERE e.user_id = ? AND ${searchWhere}
+               ORDER BY e.created_at DESC
+               LIMIT 50`
+            )
+              .bind(me.id, ...searchBinds)
+              .all()
+            : await env.DB.prepare(
+              `SELECT e.id, e.local_part, '' as domain, e.from_addr, e.to_addr, e.subject, e.date, e.created_at,
+                      substr(COALESCE(e.text,''), 1, 220) as snippet
+               FROM emails e
+               WHERE e.user_id = ? AND ${searchWhere}
+               ORDER BY e.created_at DESC
+               LIMIT 50`
+            )
+              .bind(me.id, ...searchBinds)
+              .all();
+
+          return json({ ok: true, emails: rows.results || [] });
+        }
         if (path.startsWith("/api/emails/") && request.method === "GET") {
           const id = decodeURIComponent(path.slice("/api/emails/".length));
           const row = await env.DB.prepare(
