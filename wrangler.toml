@@ -1,0 +1,28 @@
+name = "maail-portal2"
+main = "src/index.js"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Primary domain (default untuk display)
+DOMAIN = "satogala.biz.id"
+# Semua domain yang didukung (pisahkan dengan koma, tambah domain baru di sini)
+ALLOWED_DOMAINS = "satogala.biz.id"
+APP_BASE_URL = "https://portal.satogala.biz.id"
+DEFAULT_ALIAS_LIMIT = "3"
+SESSION_TTL_SECONDS = "1209600"
+RESET_TTL_SECONDS = "3600"
+MAX_STORE_BYTES = "10485760"
+MAX_TEXT_CHARS = "500000"
+INLINE_ATTACHMENT_DB_BYTES = "65536"
+# Hemat R2: raw .eml tidak disimpan, attachment tetap disimpan agar bisa dibuka.
+STORE_RAW_EMAILS = "false"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "maail_portal"
+database_id = "241525c4-1751-4594-914a-86cc1f8fe07b"
+
+[[r2_buckets]]
+binding = "MAIL_R2"
+bucket_name = "maail-portal-mail2"
