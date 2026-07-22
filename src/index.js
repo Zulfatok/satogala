@@ -467,288 +467,368 @@ function pageTemplate(title, body, extraHead = "") {
   ${extraHead}
   <style>
     :root{
-      /* Dark acrylic theme */
-      --bg0:#07080d;
-      --bg1:#0d0f16;
-      --bg2:#161922;
+      /* ===== N_MAZY design system — refined ===== */
+      /* base surfaces */
+      --bg0:#05070c;
+      --bg1:#0a0d15;
+      --bg2:#12161f;
 
-      --card: rgba(20,23,31,.68);
-      --card2: rgba(9,11,17,.78);
-      --border: rgba(255,255,255,.12);
+      /* glass */
+      --card: rgba(18,22,31,.64);
+      --card2: rgba(9,11,17,.80);
+      --border: rgba(255,255,255,.10);
+      --border-strong: rgba(255,255,255,.17);
 
-      --text:#f7f8fb;
-      --muted:#a7adba;
+      /* text */
+      --text:#f4f6fb;
+      --muted:#9aa2b2;
+      --muted-2:#6b7385;
 
+      /* brand */
       --brand:#38d5c8;
       --brand-light:#7df4e7;
+      --brand-dark:#1aa99d;
       --brand2:#f6c76f;
+      --brand2-light:#ffdd97;
 
-      --danger:#ef4444;
-      --success:#10b981;
+      /* status */
+      --danger:#f0616d;
+      --success:#22c8a0;
       --warning:#f59e0b;
+      --info:#5b9dff;
 
-      /* paper (buat baca email biar jelas) */
+      /* reading paper */
       --paper:#f8fafc;
       --paperText:#0f172a;
       --paperBorder: rgba(2,6,23,.12);
+
+      /* radii */
+      --r-sm:10px;
+      --r-md:14px;
+      --r-lg:18px;
+      --r-xl:22px;
+
+      /* elevation */
+      --shadow-sm: 0 2px 10px rgba(0,0,0,.32);
+      --shadow-md: 0 14px 38px rgba(0,0,0,.42);
+      --shadow-lg: 0 30px 80px rgba(0,0,0,.55);
+      --ring: 0 0 0 4px rgba(56,213,200,.16);
+
+      /* type */
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+      /* motion */
+      --ease: cubic-bezier(.22,.61,.36,1);
+      --ease-out: cubic-bezier(.16,1,.3,1);
+      --dur:.22s;
+      --dur-lg:.5s;
     }
 
     *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+
     body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin:0;
       color:var(--text);
       min-height:100vh;
+      font-size:15px;
+      line-height:1.5;
+      letter-spacing:.1px;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
       background:
-        linear-gradient(135deg, rgba(255,255,255,.045) 0 1px, transparent 1px 16px),
-        linear-gradient(180deg, var(--bg1), var(--bg0) 55%, #050609);
+        radial-gradient(1100px 560px at 12% -8%, rgba(56,213,200,.09), transparent 55%),
+        radial-gradient(900px 560px at 108% -4%, rgba(246,199,111,.07), transparent 52%),
+        linear-gradient(135deg, rgba(255,255,255,.028) 0 1px, transparent 1px 22px),
+        linear-gradient(180deg, var(--bg1), var(--bg0) 62%, #04050a);
       background-color: var(--bg0);
+      background-attachment: fixed;
       position:relative;
+      overflow-x:hidden;
     }
     body::before{
       content:"";
       position:fixed;
-      inset:0;
+      inset:-25% -10% auto -10%;
+      height:72vh;
       pointer-events:none;
+      z-index:0;
       background:
-        linear-gradient(120deg, rgba(56,213,200,.10), transparent 34%),
-        linear-gradient(300deg, rgba(246,199,111,.08), transparent 38%);
-      filter: blur(28px);
-      opacity:.65;
+        radial-gradient(560px 300px at 22% 24%, rgba(56,213,200,.13), transparent 62%),
+        radial-gradient(520px 320px at 82% 8%, rgba(246,199,111,.10), transparent 62%);
+      filter: blur(34px);
+      opacity:.7;
+      animation: floaty 20s var(--ease) infinite alternate;
+    }
+    @keyframes floaty{
+      0%{transform:translate3d(0,0,0) scale(1)}
+      100%{transform:translate3d(0,-16px,0) scale(1.05)}
     }
 
-    a{color:var(--brand);text-decoration:none}
-    a:hover{opacity:.92;text-decoration:underline}
+    a{color:var(--brand);text-decoration:none;transition:color var(--dur) var(--ease),opacity var(--dur) var(--ease)}
+    a:hover{color:var(--brand-light)}
 
-    .wrap{max-width:1040px;margin:0 auto;padding:18px;position:relative;z-index:1}
+    ::selection{background:rgba(56,213,200,.30);color:#ffffff}
+
+    /* scrollbars */
+    *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent}
+    *::-webkit-scrollbar{width:10px;height:10px}
+    *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:999px;border:2px solid transparent;background-clip:content-box}
+    *::-webkit-scrollbar-thumb:hover{background:rgba(56,213,200,.34);background-clip:content-box}
+
+    .wrap{max-width:1060px;margin:0 auto;padding:22px 18px 60px;position:relative;z-index:1}
+
+    /* ===== header ===== */
     .hdr{
       display:flex;justify-content:space-between;align-items:center;
-      gap:14px; padding:12px 0 6px;
+      gap:14px;padding:10px 4px 14px;
+      animation: fadeDown var(--dur-lg) var(--ease-out) both;
     }
-    .brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .logo{display:flex;align-items:center}
+    .brand{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+    .logo{display:flex;align-items:center;filter:drop-shadow(0 6px 16px rgba(56,213,200,.25));transition:transform var(--dur) var(--ease)}
+    .logo:hover{transform:translateY(-1px) rotate(-2deg)}
     .brandText{display:flex;flex-direction:column;line-height:1.05}
-    .brandName{font-weight:900;letter-spacing:.2px}
-    .brandSub{color:var(--muted);font-size:12.5px;margin-top:4px}
+    .brandName{font-weight:800;letter-spacing:.4px;font-size:16px;background:linear-gradient(90deg,#ffffff,#cfeee9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brandSub{color:var(--muted);font-size:12.5px;margin-top:3px}
     .hdrRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
+    /* ===== card ===== */
     .card{
       background:
-        linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.025) 52%, rgba(0,0,0,.10)),
+        linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.015) 46%, rgba(0,0,0,.12)),
         var(--card);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:20px;
-      padding:20px;
+      border:1px solid var(--border);
+      border-radius:var(--r-xl);
+      padding:22px;
       margin:16px 0;
-      box-shadow: 
-        0 24px 70px rgba(0,0,0,.58),
-        inset 0 1px 0 rgba(255,255,255,.12);
-      backdrop-filter: blur(24px) saturate(135%);
-      -webkit-backdrop-filter: blur(24px) saturate(135%);
+      box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.10);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      position:relative;
       overflow:hidden;
+      animation: fadeInUp var(--dur-lg) var(--ease-out) both;
     }
+    .card::before{
+      content:"";position:absolute;left:0;right:0;top:0;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(56,213,200,.55),rgba(246,199,111,.4),transparent);
+      opacity:.7;
+    }
+    .card:nth-of-type(1){animation-delay:.02s}
+    .card:nth-of-type(2){animation-delay:.09s}
+    .card:nth-of-type(3){animation-delay:.16s}
+    .card:nth-of-type(4){animation-delay:.23s}
+    .card:nth-of-type(5){animation-delay:.30s}
 
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    /* ===== form controls ===== */
     input,button,select,textarea{font:inherit}
-    label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}
+    label{display:block;margin-bottom:7px;color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.2px}
     input,select,textarea{
       width:100%;
-      padding:12px 12px;
-      border-radius:14px;
+      padding:12px 14px;
+      border-radius:var(--r-md);
       border:1px solid var(--border);
-      background: rgba(5,7,12,.72);
+      background: rgba(4,6,11,.66);
       color:var(--text);
       outline:none;
+      transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background var(--dur) var(--ease);
     }
-    input::placeholder{color: rgba(167,173,186,.62)}
+    input:hover,select:hover,textarea:hover{border-color:var(--border-strong)}
+    input::placeholder{color: rgba(154,162,178,.55)}
     input:focus,select:focus,textarea:focus{
-      border-color: rgba(56,213,200,.72);
-      box-shadow: 0 0 0 4px rgba(56,213,200,.12);
+      border-color: rgba(56,213,200,.75);
+      box-shadow: var(--ring);
+      background: rgba(4,6,11,.85);
     }
+    select{cursor:pointer}
 
-    /* Password show/hide */
-    .pwWrap{ position:relative; }
-    .pwWrap input{ padding-right: 92px; } /* ruang buat tombol */
+    /* password toggle */
+    .pwWrap{position:relative}
+    .pwWrap input{padding-right:84px}
     .pwToggle{
-      position:absolute;
-      right:10px;
-      top:50%;
-      transform:translateY(-50%);
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.075);
-      color: #d9dde6;
-      font-size:12px;
-      cursor:pointer;
+      position:absolute;right:8px;top:50%;transform:translateY(-50%);
+      padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+      background: rgba(255,255,255,.06);color:#d9dde6;font-size:12px;cursor:pointer;
+      transition:background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease);
     }
-    .pwToggle:hover{
-      background: rgba(56,213,200,.14);
-      color: var(--text);
-      border-color: rgba(56,213,200,.34);
-    }
+    .pwToggle:hover{background: rgba(56,213,200,.16);color:var(--text);border-color: rgba(56,213,200,.4);transform:translateY(-50%)}
+    .pwToggle:active{transform:translateY(-50%) scale(.95)}
 
+    /* ===== buttons ===== */
     button{
-      padding:11px 16px;
-      border-radius:12px;
+      padding:11px 17px;border-radius:var(--r-md);
       border:1px solid var(--border);
-      background: rgba(255,255,255,.07);
-      color:var(--text);
-      cursor:pointer;
-      font-weight:500;
-      transition: all .2s ease;
-      white-space:nowrap;
+      background: rgba(255,255,255,.06);
+      color:var(--text);cursor:pointer;font-weight:600;letter-spacing:.2px;
+      transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background var(--dur) var(--ease),border-color var(--dur) var(--ease);
+      white-space:nowrap;position:relative;overflow:hidden;
+      -webkit-tap-highlight-color:transparent;
     }
+    button::after{
+      content:"";position:absolute;inset:0;
+      background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);
+      transform:translateX(-130%);transition:transform .6s var(--ease);pointer-events:none;
+    }
+    button:hover::after{transform:translateX(130%)}
     button:hover{
-      background: rgba(255,255,255,.11);
-      border-color: rgba(56,213,200,.38);
-      transform: translateY(-1px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      background: rgba(255,255,255,.10);
+      border-color: rgba(56,213,200,.4);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
-    button:active{transform: translateY(0)}
+    button:active{transform: translateY(0) scale(.99)}
+    button:focus-visible{outline:none;box-shadow:var(--ring)}
+
     .btn-primary{
-      background: linear-gradient(135deg, rgba(56,213,200,.28), rgba(246,199,111,.18));
-      border-color: rgba(56,213,200,.46);
-      font-weight:600;
-      box-shadow: 0 14px 36px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.04) inset;
+      background: linear-gradient(135deg, rgba(56,213,200,.30), rgba(246,199,111,.20));
+      border-color: rgba(56,213,200,.48);
+      color:#eafffb;
+      box-shadow: 0 12px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.14);
     }
     .btn-primary:hover{
-      background: linear-gradient(135deg, rgba(56,213,200,.36), rgba(246,199,111,.24));
-      border-color: rgba(125,244,231,.64);
-      box-shadow: 0 18px 42px rgba(0,0,0,.42), 0 0 24px rgba(56,213,200,.10);
-      transform: translateY(-2px);
+      background: linear-gradient(135deg, rgba(56,213,200,.42), rgba(246,199,111,.28));
+      border-color: rgba(125,244,231,.7);
+      box-shadow: 0 18px 44px rgba(0,0,0,.44), 0 0 26px rgba(56,213,200,.18);
     }
-    .btn-ghost{background: rgba(255,255,255,.04)}
-    .danger{
-      border-color: rgba(239,68,68,.50);
-      background: rgba(239,68,68,.12);
-    }
-    .danger:hover{background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.60)}
+    .btn-ghost{background: rgba(255,255,255,.035);border-color:var(--border)}
+    .btn-ghost:hover{background:rgba(255,255,255,.07)}
+    .danger{border-color: rgba(240,97,109,.5);background: rgba(240,97,109,.12);color:#ffd9dc}
+    .danger:hover{background: rgba(240,97,109,.2);border-color: rgba(240,97,109,.66);box-shadow:0 14px 34px rgba(240,97,109,.16)}
 
+    /* ===== bits ===== */
     .muted{color:var(--muted)}
     .pill{
       display:inline-flex;align-items:center;gap:6px;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.065);
-      color:#cfd4df;
-      font-size:12px;
+      padding:6px 11px;border-radius:999px;border:1px solid var(--border);
+      background: rgba(255,255,255,.05);color:#cfd4df;font-size:12px;font-weight:500;
+      transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur) var(--ease);
     }
+    a.pill:hover{background:rgba(56,213,200,.14);border-color:rgba(56,213,200,.4);color:#eafffb;transform:translateY(-1px)}
     .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
+      font-family: var(--mono);
+      font-size:12px;padding:2px 8px;border-radius:8px;border:1px solid var(--border);
+      background: rgba(255,255,255,.04);color:var(--muted);
     }
 
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
 
     .listItem{
-      padding:12px 0;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+      padding:14px 0;border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+      transition:background var(--dur) var(--ease);
     }
 
-    /* Inbox list */
+    /* status output line */
+    pre#out, pre#out2{
+      white-space:pre-wrap;word-break:break-word;margin:12px 0 0;
+      font-family:var(--mono);font-size:12.5px;color:var(--muted);
+    }
+
+    /* ===== inbox list ===== */
     .mailItem{
-      padding:12px 12px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background: rgba(255,255,255,.03);
-      margin-bottom:10px;
+      padding:14px 15px;border:1px solid var(--border);border-radius:var(--r-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+      margin-bottom:11px;cursor:pointer;position:relative;
+      transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background var(--dur) var(--ease);
     }
-    .mailSubject{font-weight:900; font-size:14.5px}
-    .mailMeta{color:var(--muted); font-size:12.5px; margin-top:4px; line-height:1.35}
-    .mailSnippet{
-      color: rgba(238,242,255,.92);
-      font-size: 13.5px;
-      margin-top:10px;
-      line-height:1.55;
-      white-space:pre-wrap;
-      word-break:break-word;
+    .mailItem::before{
+      content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:999px;
+      background:linear-gradient(180deg,var(--brand),var(--brand2));opacity:0;transition:opacity var(--dur) var(--ease);
+    }
+    .mailItem:hover{
+      transform:translateY(-2px);border-color:rgba(56,213,200,.34);
+      box-shadow:var(--shadow-md);background:linear-gradient(180deg,rgba(56,213,200,.06),rgba(255,255,255,.01));
+    }
+    .mailItem:hover::before{opacity:1}
+    .mailSubject{font-weight:700;font-size:15px;letter-spacing:.1px}
+    .mailMeta{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.4}
+    .mailSnippet{color: rgba(228,232,245,.86);font-size:13.5px;margin-top:10px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+
+    /* ===== viewer ===== */
+    .viewerHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .paper{background: var(--paper);color: var(--paperText);border:1px solid var(--paperBorder);border-radius:var(--r-lg);padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+    .mailFrame{width:100%;height:70vh;border:1px solid var(--paperBorder);border-radius:var(--r-lg);background: var(--paper);box-shadow:var(--shadow-sm)}
+    .mailText{white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:14px;line-height:1.65;margin:0}
+
+    .hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+
+    /* ===== email modal / popup ===== */
+    .modalOverlay{
+      position:fixed;inset:0;z-index:100;
+      display:flex;align-items:flex-start;justify-content:center;
+      padding:6vh 16px 24px;
+      background:rgba(3,5,9,.60);
+      backdrop-filter:blur(7px) saturate(120%);
+      -webkit-backdrop-filter:blur(7px) saturate(120%);
+      opacity:0;visibility:hidden;pointer-events:none;
+      transition:opacity .28s var(--ease),visibility .28s var(--ease);
+      overflow-y:auto;
+    }
+    .modalOverlay.open{opacity:1;visibility:visible;pointer-events:auto}
+    .modalCard{
+      width:100%;max-width:840px;margin:auto;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.015) 46%, rgba(0,0,0,.12)),
+        var(--card);
+      border:1px solid var(--border-strong);
+      border-radius:var(--r-xl);
+      padding:22px;
+      box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.10);
+      backdrop-filter:blur(26px) saturate(140%);
+      -webkit-backdrop-filter:blur(26px) saturate(140%);
+      position:relative;max-height:88vh;overflow:auto;
+      transform:translateY(18px) scale(.985);opacity:0;
+      transition:transform .32s var(--ease-out),opacity .32s var(--ease-out);
+    }
+    .modalOverlay.open .modalCard{transform:none;opacity:1}
+    .modalCard::before{
+      content:"";position:absolute;left:0;right:0;top:0;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(56,213,200,.55),rgba(246,199,111,.4),transparent);opacity:.7;
+    }
+    .modalClose{position:sticky;top:0}
+    body.modal-open{overflow:hidden}
+    @media (max-width:760px){
+      .modalOverlay{padding:0}
+      .modalCard{max-width:none;min-height:100vh;max-height:none;border-radius:0;border:0;margin:0}
     }
 
-    /* Viewer */
-    .viewerHead{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:flex-start;
-      flex-wrap:wrap;
-    }
-    .paper{
-      background: var(--paper);
-      color: var(--paperText);
-      border: 1px solid var(--paperBorder);
-      border-radius: 16px;
-      padding: 14px;
-    }
-    .mailFrame{
-      width:100%;
-      height: 70vh;
-      border: 1px solid var(--paperBorder);
-      border-radius: 16px;
-      background: var(--paper);
-    }
-    .mailText{
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 14px;
-      line-height: 1.65;
-      margin:0;
-    }
-
-    .hr{border:0;border-top:1px solid var(--border);margin:12px 0}
-
-    /* Checkbox styling */
-    .emailCheckbox{
-      width:20px;
-      height:20px;
-      cursor:pointer;
-      accent-color: var(--brand);
-      flex-shrink:0;
-    }
-    .selectAllCheckbox{
-      width:18px;
-      height:18px;
-      cursor:pointer;
-      accent-color: var(--brand);
-      margin-right:8px;
-    }
-    .mailItem.selected{
-      background: rgba(59,130,246,.12);
-      border-color: rgba(59,130,246,.45);
-    }
+    /* ===== checkboxes + bulk ===== */
+    .emailCheckbox{width:20px;height:20px;cursor:pointer;accent-color: var(--brand);flex-shrink:0}
+    .selectAllCheckbox{width:18px;height:18px;cursor:pointer;accent-color: var(--brand);margin-right:8px}
+    .mailItem.selected{background: rgba(91,157,255,.14);border-color: rgba(91,157,255,.5)}
+    .mailItem.selected::before{opacity:1;background:linear-gradient(180deg,var(--info),#8ab6ff)}
     .bulkActions{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      padding:10px 12px;
-      background: rgba(59,130,246,.08);
-      border:1px solid rgba(59,130,246,.3);
-      border-radius:12px;
-      margin-bottom:10px;
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:11px 13px;background: rgba(91,157,255,.08);
+      border:1px solid rgba(91,157,255,.28);border-radius:var(--r-md);margin-bottom:12px;
+      animation:fadeIn var(--dur) var(--ease-out) both;
     }
 
+    /* ===== utilities: skeleton + spinner ===== */
+    .skeleton{position:relative;overflow:hidden;background:rgba(255,255,255,.05);border-radius:10px}
+    .skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);animation:shimmer 1.4s infinite}
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+    .spinner{display:inline-block;width:15px;height:15px;border-radius:50%;
+      border:2px solid rgba(255,255,255,.25);border-top-color:var(--brand);animation:spin .8s linear infinite;vertical-align:-2px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ===== responsive ===== */
     @media (max-width: 860px){
       .split{grid-template-columns:1fr}
     }
     @media (max-width: 760px){
-      .wrap{padding:14px}
+      body{font-size:14.5px}
+      .wrap{padding:16px 14px 48px}
       .hdr{flex-direction:column;align-items:flex-start}
       .row{grid-template-columns:1fr}
-      .mailFrame{height: 58vh;}
-      
-      /* Admin page + Mail list mobile optimization */
+      .mailFrame{height:58vh}
+
       .listItem{
         flex-direction:column!important;
         align-items:flex-start!important;
@@ -763,39 +843,31 @@ function pageTemplate(title, body, extraHead = "") {
       }
       .listItem input{width:100%!important;max-width:none!important}
       .listItem button{
-        flex:1;
-        min-width:0;
-        font-size:13px;
-        padding:10px 12px;
-        display:block!important;
-        width:100%!important;
+        flex:1;min-width:0;font-size:13px;padding:10px 12px;
+        display:block!important;width:100%!important;
       }
-      
-      /* Mail list specific - ensure visibility with aggressive rules */
+
       #aliases{
-        min-height:40px!important;
-        display:block!important;
-        visibility:visible!important;
-        opacity:1!important;
-        width:100%!important;
+        min-height:40px!important;display:block!important;
+        visibility:visible!important;opacity:1!important;width:100%!important;
       }
       #aliases > div{
-        display:block!important;
-        visibility:visible!important;
-        opacity:1!important;
-        width:100%!important;
-        margin-bottom:10px!important;
+        display:block!important;visibility:visible!important;opacity:1!important;
+        width:100%!important;margin-bottom:10px!important;
       }
       #aliases .listItem{
-        display:flex!important;
-        visibility:visible!important;
-        opacity:1!important;
-        width:100%!important;
-        background:rgba(255,255,255,.03)!important;
-        border:1px solid var(--border)!important;
-        border-radius:12px!important;
-        padding:12px!important;
-        margin-bottom:8px!important;
+        display:flex!important;visibility:visible!important;opacity:1!important;
+        width:100%!important;background:rgba(255,255,255,.03)!important;
+        border:1px solid var(--border)!important;border-radius:12px!important;
+        padding:12px!important;margin-bottom:8px!important;
+      }
+    }
+
+    /* ===== reduced motion ===== */
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{
+        animation-duration:.001ms!important;animation-iteration-count:1!important;
+        transition-duration:.001ms!important;scroll-behavior:auto!important;
       }
     }
   </style>
@@ -1105,6 +1177,31 @@ const PAGES = {
         </div>
       </div>
 
+      <div class="card" id="apiKeysPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+          <b>API Keys</b>
+          <span class="muted" style="font-size:12px">Akses tanpa cookie — untuk bot / integrasi</span>
+        </div>
+        <div class="muted" style="font-size:12.5px;margin-bottom:12px">
+          Pakai header <span class="kbd">Authorization: Bearer &lt;key&gt;</span> atau <span class="kbd">X-API-Key: &lt;key&gt;</span> pada endpoint <span class="kbd">/api/*</span>. Key mewakili akunmu dan bisa dicabut kapan saja.
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+          <div style="flex:1;min-width:180px"><label>Nama key</label><input id="keyName" placeholder="contoh: bot-telegram" /></div>
+          <div style="min-width:150px"><label>Kedaluwarsa</label>
+            <select id="keyExpiry">
+              <option value="0">Tanpa kedaluwarsa</option>
+              <option value="7">7 hari</option>
+              <option value="30">30 hari</option>
+              <option value="90">90 hari</option>
+              <option value="365">1 tahun</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="createKey()">Buat Key</button>
+        </div>
+        <div id="keyCreateOut" style="margin-top:10px"></div>
+        <div id="apiKeysList" style="margin-top:14px"></div>
+      </div>
+
       <div class="card" id="globalSearchPanel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
           <b>Cari Pesan</b>
@@ -1124,7 +1221,9 @@ const PAGES = {
         <div id="aliases" style="margin-top:10px"></div>
       </div>
 
-      <div class="card" id="emailView" style="display:none"></div>
+      <div class="modalOverlay" id="emailModal" aria-hidden="true" onclick="if(event.target===this)showInboxPanel()">
+        <div class="modalCard" id="emailView" role="dialog" aria-modal="true" aria-label="Isi pesan"></div>
+      </div>
 
       <script>
         // Browser compatibility detection
@@ -1377,11 +1476,11 @@ const PAGES = {
           box.style.display = 'block';
           box.style.visibility = 'visible';
           box.style.opacity = '1';
-          box.style.minHeight = '100px';
-          box.style.background = 'rgba(59,130,246,0.05)';
-          box.style.border = '2px solid rgba(59,130,246,0.3)';
-          box.style.padding = '12px';
-          box.style.borderRadius = '8px';
+          box.style.minHeight = 'auto';
+          box.style.background = 'transparent';
+          box.style.border = 'none';
+          box.style.padding = '0';
+          box.style.borderRadius = '0';
           console.log('✅ Forced visibility CSS applied to inbox container');
           
           try{
@@ -1486,28 +1585,17 @@ const PAGES = {
         }
 
         function showEmailPanel(){
-          const accountPanel = document.getElementById('accountPanel');
-          const globalSearchPanel = document.getElementById('globalSearchPanel');
-          const mailPanel = document.getElementById('mailPanel');
-          const emailView = document.getElementById('emailView');
-          if(accountPanel) accountPanel.style.display = 'none';
-          if(globalSearchPanel) globalSearchPanel.style.display = 'none';
-          if(mailPanel) mailPanel.style.display = 'none';
-          if(emailView) emailView.style.display = 'block';
+          const modal = document.getElementById('emailModal');
+          if(modal){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+          document.body.classList.add('modal-open');
         }
 
         function showInboxPanel(){
-          const accountPanel = document.getElementById('accountPanel');
-          const globalSearchPanel = document.getElementById('globalSearchPanel');
-          const mailPanel = document.getElementById('mailPanel');
+          const modal = document.getElementById('emailModal');
+          if(modal){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
           const emailView = document.getElementById('emailView');
-          if(accountPanel) accountPanel.style.display = '';
-          if(globalSearchPanel) globalSearchPanel.style.display = '';
-          if(mailPanel) mailPanel.style.display = '';
-          if(emailView){
-            emailView.style.display = 'none';
-            emailView.innerHTML = '';
-          }
+          if(emailView) emailView.innerHTML = '';
+          document.body.classList.remove('modal-open');
         }
 
         function renderAttachments(email, mount){
@@ -1575,7 +1663,7 @@ const PAGES = {
                 '<div class="muted">To: '+esc(j.email.to_addr||'')+'</div>'+
                 '<div class="muted">'+esc(fmtDate(j.email.date || j.email.created_at || ""))+'</div>'+
               '</div>'+
-              '<button class="btn-ghost" onclick="showInboxPanel()">Kembali</button>'+
+              '<button class="btn-ghost modalClose" onclick="showInboxPanel()">\u2715 Tutup</button>'+
             '</div>'+
             '<hr class="hr" />'+
             '<div id="msgBody"></div>';
@@ -1607,7 +1695,7 @@ const PAGES = {
 
           renderAttachments(j.email, body);
 
-          v.scrollIntoView({behavior:'smooth'});
+          v.scrollTop = 0;
         }
 
         async function createAlias(){
@@ -1750,6 +1838,86 @@ const PAGES = {
           location.href='/login';
         }
 
+        async function loadKeys(){
+          const box = document.getElementById('apiKeysList');
+          if(!box) return;
+          box.innerHTML = '<div class="muted">Memuat API key...</div>';
+          try{
+            const j = await api('/api/keys');
+            if(!j.ok){ box.innerHTML = '<div class="muted">Gagal memuat API key.</div>'; return; }
+            if(!j.keys || !j.keys.length){ box.innerHTML = '<div class="muted">Belum ada API key.</div>'; return; }
+            let html = '';
+            for(var i=0;i<j.keys.length;i++){
+              var k = j.keys[i];
+              var exp = k.expires_at ? ('kedaluwarsa '+fmtDate(k.expires_at)) : 'tanpa kedaluwarsa';
+              var used = k.last_used_at ? ('dipakai '+fmtDate(k.last_used_at)) : 'belum dipakai';
+              html += '<div class="listItem">'+
+                '<div style="min-width:0;flex:1">'+
+                  '<div><b>'+esc(k.name||'API key')+'</b> <span class="kbd">'+esc(k.prefix||'')+'...</span></div>'+
+                  '<div class="mailMeta">Dibuat '+esc(fmtDate(k.created_at))+' &middot; '+esc(used)+' &middot; '+esc(exp)+'</div>'+
+                '</div>'+
+                '<button class="danger" data-revoke="'+esc(k.id)+'">Cabut</button>'+
+              '</div>';
+            }
+            box.innerHTML = html;
+          }catch(e){
+            box.innerHTML = '<div class="muted">Gagal memuat API key: '+esc(e && e.message ? e.message : String(e))+'</div>';
+          }
+        }
+
+        async function createKey(){
+          const nameEl = document.getElementById('keyName');
+          const expEl = document.getElementById('keyExpiry');
+          const out = document.getElementById('keyCreateOut');
+          const name = nameEl ? nameEl.value.trim() : '';
+          const expires_days = expEl ? Number(expEl.value||0) : 0;
+          out.innerHTML = '<span class="muted">Membuat...</span>';
+          try{
+            const j = await api('/api/keys', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ name: name, expires_days: expires_days }) });
+            if(!j.ok){ out.innerHTML = '<span class="muted">Gagal: '+esc(j.error||'gagal')+'</span>'; return; }
+            if(nameEl) nameEl.value = '';
+            out.innerHTML =
+              '<div class="paper" style="margin-top:6px">'+
+                '<div style="font-weight:800;margin-bottom:6px">API key baru — salin sekarang, tidak akan ditampilkan lagi:</div>'+
+                '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
+                  '<code id="newKeyVal" style="font-size:13px;word-break:break-all;background:rgba(2,6,23,.06);padding:8px 10px;border-radius:8px;flex:1;min-width:0">'+esc(j.key)+'</code>'+
+                  '<button class="btn-primary" onclick="copyKey()">Copy</button>'+
+                '</div>'+
+              '</div>';
+            await loadKeys();
+          }catch(e){
+            out.innerHTML = '<span class="muted">Gagal: '+esc(e && e.message ? e.message : String(e))+'</span>';
+          }
+        }
+
+        function copyKey(){
+          var el = document.getElementById('newKeyVal');
+          if(!el) return;
+          var txt = el.textContent || '';
+          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt); }
+          var btn = el.parentElement ? el.parentElement.querySelector('button') : null;
+          if(btn){ var old = btn.textContent; btn.textContent = 'Tersalin'; setTimeout(function(){ btn.textContent = old; }, 1400); }
+        }
+
+        async function revokeKey(id){
+          if(!confirm('Cabut API key ini? Aplikasi yang memakainya akan langsung berhenti bekerja.')) return;
+          try{
+            const j = await api('/api/keys/'+encodeURIComponent(id), { method:'DELETE' });
+            if(!j.ok){ alert(j.error||'gagal'); return; }
+            await loadKeys();
+          }catch(e){ alert('Gagal mencabut: ' + (e && e.message ? e.message : String(e))); }
+        }
+
+        document.addEventListener('click', function(e){
+          var b = e.target && e.target.closest ? e.target.closest('[data-revoke]') : null;
+          if(b){ revokeKey(b.getAttribute('data-revoke')); }
+        });
+
+        window.loadKeys = loadKeys;
+        window.createKey = createKey;
+        window.copyKey = copyKey;
+        window.revokeKey = revokeKey;
+
         // expose functions for inline handlers
         window.createAlias = createAlias;
         window.selectAlias = selectAlias;
@@ -1766,10 +1934,19 @@ const PAGES = {
         window.clearGlobalEmailSearch = clearGlobalEmailSearch;
         window.logout = logout;
 
+        // close the email popup on Escape
+        window.addEventListener('keydown', function(e){
+          if(e.key === 'Escape'){
+            var m = document.getElementById('emailModal');
+            if(m && m.classList.contains('open')) showInboxPanel();
+          }
+        });
+
         (async ()=>{
           try{
             await loadMe();
             await loadAliases();
+            try { await loadKeys(); } catch(_e) {}
           }catch(e){
             const msg = String(e && e.message ? e.message : e);
             const aliasesBox = document.getElementById('aliases');
@@ -1791,162 +1968,110 @@ const PAGES = {
       <style>
         .adminLayout{
           display:grid;
-          grid-template-columns:280px 1fr;
+          grid-template-columns:284px 1fr;
           gap:0;
-          min-height:calc(100vh - 40px);
-          margin:-18px;
+          min-height:calc(100vh - 44px);
+          margin:-22px -18px -60px;
         }
         .adminSidebar{
           background:
-            linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%),
-            var(--card);
+            linear-gradient(180deg, rgba(255,255,255,.05), transparent 38%),
+            var(--card2);
           border-right:1px solid var(--border);
-          padding:20px 0;
+          padding:22px 0;
           position:sticky;
           top:0;
           height:100vh;
           overflow-y:auto;
+          display:flex;
+          flex-direction:column;
+          backdrop-filter: blur(20px) saturate(140%);
+          -webkit-backdrop-filter: blur(20px) saturate(140%);
         }
         .adminContent{
-          padding:20px 24px;
+          padding:26px 28px;
           overflow-y:auto;
+          animation: fadeIn var(--dur-lg) var(--ease-out) both;
         }
         .sidebarBrand{
-          padding:0 20px 20px;
+          padding:0 22px 18px;
           border-bottom:1px solid var(--border);
-          margin-bottom:12px;
+          margin-bottom:14px;
         }
         .sidebarBrandTitle{
-          display:flex;
-          align-items:center;
-          gap:10px;
-          font-weight:900;
-          font-size:16px;
-          margin-bottom:4px;
+          display:flex;align-items:center;gap:10px;
+          font-weight:800;font-size:16px;margin-bottom:4px;
         }
-        .sidebarBrandSub{
-          color:var(--muted);
-          font-size:12px;
-        }
-        .sidebarNav{
-          padding:0 12px;
-        }
+        .sidebarBrandSub{color:var(--muted);font-size:12px}
+        .sidebarNav{padding:0 12px;display:flex;flex-direction:column;gap:2px}
         .sidebarItem{
-          display:flex;
-          align-items:center;
-          gap:12px;
-          padding:12px 12px;
-          margin:4px 0;
-          border-radius:12px;
-          color:var(--text);
-          text-decoration:none;
-          cursor:pointer;
-          transition:all .2s ease;
-          border:1px solid transparent;
+          display:flex;align-items:center;gap:12px;
+          padding:12px 13px;margin:3px 0;border-radius:var(--r-md);
+          color:var(--text);text-decoration:none;cursor:pointer;
+          border:1px solid transparent;position:relative;
+          transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),transform var(--dur) var(--ease),color var(--dur) var(--ease);
+        }
+        .sidebarItem::before{
+          content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:999px;
+          background:linear-gradient(180deg,var(--brand),var(--brand2));
+          opacity:0;transform:scaleY(.4);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);
         }
         .sidebarItem:hover{
-          background:rgba(59,130,246,.08);
-          border-color:rgba(59,130,246,.2);
+          background:rgba(56,213,200,.08);
+          border-color:rgba(56,213,200,.2);
+          transform:translateX(2px);
           text-decoration:none;
         }
         .sidebarItem.active{
-          background:rgba(59,130,246,.15);
-          border-color:rgba(59,130,246,.35);
+          background:rgba(56,213,200,.14);
+          border-color:rgba(56,213,200,.34);
           font-weight:600;
         }
-        .sidebarIcon{
-          font-size:18px;
-          width:20px;
-          text-align:center;
-        }
+        .sidebarItem.active::before{opacity:1;transform:scaleY(1)}
+        .sidebarIcon{font-size:18px;width:22px;text-align:center}
         .sidebarLogout{
           margin-top:auto;
-          padding:12px;
+          padding:14px 12px;
           border-top:1px solid var(--border);
         }
         .contentHeader{
-          margin-bottom:20px;
+          margin-bottom:22px;
+          animation: fadeDown var(--dur-lg) var(--ease-out) both;
         }
-        .contentTitle{
-          font-size:24px;
-          font-weight:900;
-          margin-bottom:6px;
-        }
-        .contentSubtitle{
-          color:var(--muted);
-          font-size:13px;
-        }
+        .contentTitle{font-size:25px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
+        .contentSubtitle{color:var(--muted);font-size:13px}
         .userCard{
           background:
-            linear-gradient(180deg, rgba(255,255,255,.04), transparent 50%),
+            linear-gradient(180deg, rgba(255,255,255,.05), transparent 52%),
             var(--card);
           border:1px solid var(--border);
-          border-radius:16px;
+          border-radius:var(--r-lg);
           padding:18px;
-          margin-bottom:12px;
-          transition:all .2s ease;
+          margin-bottom:13px;
+          transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease);
+          animation: fadeInUp var(--dur-lg) var(--ease-out) both;
         }
         .userCard:hover{
-          border-color:rgba(96,165,250,.35);
-          transform:translateY(-1px);
-          box-shadow:0 4px 16px rgba(0,0,0,.3);
+          border-color:rgba(56,213,200,.34);
+          transform:translateY(-2px);
+          box-shadow:var(--shadow-md);
         }
         .userHeader{
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-start;
-          gap:12px;
-          flex-wrap:wrap;
-          margin-bottom:12px;
+          display:flex;justify-content:space-between;align-items:flex-start;
+          gap:12px;flex-wrap:wrap;margin-bottom:12px;
         }
-        .userInfo{
-          flex:1;
-          min-width:200px;
-        }
-        .userName{
-          font-weight:700;
-          font-size:15px;
-          margin-bottom:4px;
-        }
-        .userEmail{
-          color:var(--muted);
-          font-size:13px;
-        }
-        .userBadges{
-          display:flex;
-          gap:6px;
-          flex-wrap:wrap;
-          margin-top:8px;
-        }
-        .userActions{
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:10px;
-          margin-top:12px;
-        }
-        .limitInput{
-          display:flex;
-          gap:8px;
-          align-items:center;
-          grid-column:1/-1;
-        }
-        .limitInput input{
-          width:100px;
-          padding:8px 10px;
-        }
+        .userInfo{flex:1;min-width:200px}
+        .userName{font-weight:700;font-size:15.5px;margin-bottom:4px}
+        .userEmail{color:var(--muted);font-size:13px}
+        .userBadges{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+        .userActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+        .limitInput{display:flex;gap:8px;align-items:center;grid-column:1/-1}
+        .limitInput input{width:110px;padding:9px 11px}
         @media (max-width: 860px){
-          .adminLayout{
-            grid-template-columns:1fr;
-          }
-          .adminSidebar{
-            display:none;
-          }
-          .adminContent{
-            padding:14px;
-          }
-          .userActions{
-            grid-template-columns:1fr;
-          }
+          .adminLayout{grid-template-columns:1fr;margin:-16px -14px -48px}
+          .adminSidebar{display:none}
+          .adminContent{padding:16px}
+          .userActions{grid-template-columns:1fr}
         }
       </style>
 
@@ -2469,6 +2594,14 @@ const PAGES = {
         window.showSection = showSection;
         window.showSettings = showSettings;
         window.logout = logout;
+
+        // close the email popup on Escape
+        window.addEventListener('keydown', function(e){
+          if(e.key === 'Escape'){
+            var m = document.getElementById('emailModal');
+            if(m && m.classList.contains('open')) showInboxPanel();
+          }
+        });
         window.setLimit = setLimit;
         window.toggleUser = toggleUser;
         window.delUser = delUser;
@@ -2551,6 +2684,61 @@ async function cleanupExpired(env) {
   try {
     await env.DB.prepare(`DELETE FROM reset_tokens WHERE expires_at <= ?`).bind(t).run();
   } catch { }
+}
+
+let API_KEYS_SCHEMA_READY = false;
+async function ensureApiKeysSchema(env) {
+  if (API_KEYS_SCHEMA_READY) return;
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT,
+      key_hash TEXT NOT NULL UNIQUE,
+      prefix TEXT,
+      created_at INTEGER NOT NULL,
+      last_used_at INTEGER,
+      expires_at INTEGER,
+      disabled INTEGER NOT NULL DEFAULT 0
+    )`
+  ).run();
+  try { await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id)`).run(); } catch (e) {}
+  API_KEYS_SCHEMA_READY = true;
+}
+
+// Resolve the current user from an API key (Authorization: Bearer <key> or X-API-Key: <key>).
+async function getUserByApiKey(request, env, ctx) {
+  let key = "";
+  const auth = request.headers.get("authorization") || "";
+  if (/^bearer\s+/i.test(auth)) key = auth.replace(/^bearer\s+/i, "").trim();
+  if (!key) key = (request.headers.get("x-api-key") || "").trim();
+  if (!key) return null;
+  try {
+    await ensureApiKeysSchema(env);
+    const keyHash = await sha256Base64Url(encoder.encode(key));
+    const row = await env.DB.prepare(
+      `SELECT k.id as key_id, k.disabled as key_disabled, k.expires_at as key_expires_at,
+              u.id as id, u.username as username, u.email as email,
+              u.role as role, u.alias_limit as alias_limit, u.disabled as disabled
+       FROM api_keys k JOIN users u ON u.id = k.user_id
+       WHERE k.key_hash = ?`
+    ).bind(keyHash).first();
+    if (!row || row.disabled || row.key_disabled) return null;
+    if (row.key_expires_at && Number(row.key_expires_at) <= nowSec()) return null;
+    if (ctx && ctx.waitUntil) {
+      ctx.waitUntil(
+        env.DB.prepare(`UPDATE api_keys SET last_used_at = ? WHERE id = ?`)
+          .bind(nowSec(), row.key_id).run().catch(() => {})
+      );
+    }
+    return {
+      id: row.id, username: row.username, email: row.email,
+      role: row.role, alias_limit: row.alias_limit, disabled: row.disabled,
+    };
+  } catch (e) {
+    console.log("api key auth error:", e && e.message ? e.message : e);
+    return null;
+  }
 }
 
 // NEW: delete user (cascade + R2 cleanup)
@@ -3025,7 +3213,7 @@ export default {
         }
 
         // Auth required below
-        const me = await getUserBySession(request, env);
+        const me = (await getUserBySession(request, env)) || (await getUserByApiKey(request, env, ctx));
         if (!me) return unauthorized();
 
         if (path.startsWith("/api/email-attachments/") && request.method === "GET") {
@@ -3048,6 +3236,53 @@ export default {
               alias_limit: me.alias_limit,
             },
           });
+        }
+
+        // ---- API keys (akses tanpa cookie) ----
+        if (path === "/api/keys" && request.method === "GET") {
+          await ensureApiKeysSchema(env);
+          const rows = await env.DB.prepare(
+            `SELECT id, name, prefix, created_at, last_used_at, expires_at, disabled
+             FROM api_keys WHERE user_id = ? ORDER BY created_at DESC`
+          ).bind(me.id).all();
+          return json({ ok: true, keys: rows.results || [] });
+        }
+
+        if (path === "/api/keys" && request.method === "POST") {
+          await ensureApiKeysSchema(env);
+          const body = (await readJson(request)) || {};
+          const name = String(body.name || "").trim().slice(0, 60) || "API key";
+          let expiresAt = null;
+          const days = safeInt(body.expires_days, 0);
+          if (days > 0) expiresAt = nowSec() + days * 86400;
+          const rawKey = "nmz_" + base64Url(crypto.getRandomValues(new Uint8Array(32)));
+          const keyHash = await sha256Base64Url(encoder.encode(rawKey));
+          const prefix = rawKey.slice(0, 12);
+          const id = crypto.randomUUID();
+          const t = nowSec();
+          try {
+            await env.DB.prepare(
+              `INSERT INTO api_keys (id, user_id, name, key_hash, prefix, created_at, last_used_at, expires_at, disabled)
+               VALUES (?, ?, ?, ?, ?, ?, NULL, ?, 0)`
+            ).bind(id, me.id, name, keyHash, prefix, t, expiresAt).run();
+          } catch (e) {
+            console.log("api key create error:", e && e.message ? e.message : e);
+            return json({ ok: false, error: "DB error" }, 500);
+          }
+          return json({ ok: true, id, name, prefix, expires_at: expiresAt, key: rawKey });
+        }
+
+        if (path.startsWith("/api/keys/") && request.method === "DELETE") {
+          await ensureApiKeysSchema(env);
+          const id = decodeURIComponent(path.slice("/api/keys/".length));
+          if (!id) return badRequest("id required");
+          const own = await env.DB.prepare(
+            `SELECT id FROM api_keys WHERE id = ? AND user_id = ?`
+          ).bind(id, me.id).first();
+          if (!own) return notFound();
+          await env.DB.prepare(`DELETE FROM api_keys WHERE id = ? AND user_id = ?`)
+            .bind(id, me.id).run();
+          return json({ ok: true });
         }
 
         // Mail (aliases)
