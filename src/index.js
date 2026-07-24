@@ -1072,7 +1072,7 @@ const PAGES = {
       </div>
 
       <script>
-        // Sudah punya sesi aktif (mailbox sementara / akun)? langsung ke inbox.
+        // Sesi akun dan mailbox sementara dapat hidup berdampingan.
         fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){
           if (j && j.ok) location.href = '/app';
         }).catch(function(){});
@@ -1085,7 +1085,7 @@ const PAGES = {
           try{
             const r = await fetch('/api/temp/start', { method: 'POST' });
             const j = await r.json().catch(function(){ return null; });
-            if (j && j.ok){ location.href = '/app'; return; }
+            if (j && j.ok){ location.href = '/temporary'; return; }
             out.textContent = (j && j.error) || 'gagal';
           }catch(e){
             out.textContent = 'gagal';
@@ -1404,19 +1404,26 @@ const PAGES = {
     );
   },
 
-  app(domains) {
+  app(domains, temporaryPortal = false) {
     const domainOptions = domains.map(d => `<option value="${d}">${d}</option>`).join('');
-
-    return pageTemplate(
-      "Inbox",
-      `
-      ${headerHtml({
-        badge: "Inbox",
-        subtitle: "Kelola mail & baca inbox",
-        rightHtml: `
+    const headerActions = temporaryPortal
+      ? `
+          <a href="/app" class="pill">Portal Akun</a>
+          <button class="danger" onclick="logout()">Keluar Temp</button>
+        `
+      : `
+          <a href="/temporary" class="pill" style="border-color:rgba(56,213,200,.42);color:#b8fff8">Email Sementara</a>
           <a href="/admin" id="adminLink" class="pill" style="display:none">Admin</a>
           <button class="danger" onclick="logout()">Logout</button>
-        `,
+        `;
+
+    return pageTemplate(
+      temporaryPortal ? "Email Sementara" : "Inbox",
+      `
+      ${headerHtml({
+        badge: temporaryPortal ? "Temporary" : "Inbox",
+        subtitle: temporaryPortal ? "Mailbox sementara - aktif 7 hari" : "Kelola mail & baca inbox",
+        rightHtml: headerActions,
       })}
 
       <div id="tempBanner" class="tempBanner" style="display:none">
@@ -1433,7 +1440,7 @@ const PAGES = {
             <div class="muted">Akun</div>
             <div id="me" style="margin-top:6px">...</div>
           </div>
-          <div>
+          <div id="aliasCreator">
             <div class="muted">Buat mail baru</div>
             <div style="margin-top:10px">
               <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px">
@@ -1504,6 +1511,7 @@ const PAGES = {
         console.log('Viewport:', document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight);
         
         const DOMAINS = ${JSON.stringify(domains)};
+        const TEMP_PORTAL = ${JSON.stringify(temporaryPortal)};
         let ME=null;
         let SELECTED=null;
         let AUTO_REFRESH_INTERVAL=null;
@@ -1542,7 +1550,18 @@ const PAGES = {
           return 'inbox_'+local+'_'+safeDomain;
         }
 
+        function portalAssetUrl(url){
+          if(!TEMP_PORTAL || !url) return url;
+          return url + (url.includes('?') ? '&' : '?') + 'portal=temporary';
+        }
+
         async function api(path, opts){
+          opts = opts || {};
+          if(TEMP_PORTAL){
+            opts = Object.assign({}, opts, {
+              headers: Object.assign({}, opts.headers || {}, {'X-Mailbox-Mode':'temporary'})
+            });
+          }
           const r = await fetch(path, opts);
           const j = await r.json().catch(()=>null);
           if(!j) {
@@ -1638,7 +1657,7 @@ const PAGES = {
             const j = await api('/api/me');
             if(!j.ok){
               meBox.innerHTML = '<span class="muted">Session habis. Mengalihkan ke login...</span>';
-              location.href='/login';
+              location.href=TEMP_PORTAL ? '/' : '/login';
               return;
             }
             ME=j.user;
@@ -1655,6 +1674,10 @@ const PAGES = {
             if(ME.role==='admin') document.getElementById('adminLink').style.display='inline-flex';
             if(ME.temp){
               const tb = document.getElementById('tempBanner');
+              const creator = document.getElementById('aliasCreator');
+              const keysPanel = document.getElementById('apiKeysPanel');
+              if(creator) creator.style.display='none';
+              if(keysPanel) keysPanel.style.display='none';
               if(tb){
                 tb.style.display='flex';
                 if(ME.temp_expires_at){
@@ -1915,7 +1938,7 @@ const PAGES = {
 
             if(att.is_image && att.url){
               const img = document.createElement('img');
-              img.src = att.url;
+              img.src = portalAssetUrl(att.url);
               img.alt = att.filename || 'attachment image';
               img.loading = 'lazy';
               img.style.maxWidth = '100%';
@@ -1925,7 +1948,7 @@ const PAGES = {
               row.appendChild(img);
             } else if(att.url) {
               const a = document.createElement('a');
-              a.href = att.url;
+              a.href = portalAssetUrl(att.url);
               a.target = '_blank';
               a.rel = 'noreferrer';
               a.textContent = 'Buka lampiran';
@@ -1964,7 +1987,10 @@ const PAGES = {
             iframe.className = 'mailFrame';
             iframe.setAttribute('sandbox','allow-same-origin'); // no scripts
             iframe.setAttribute('referrerpolicy','no-referrer');
-            iframe.srcdoc = wrapEmailHtml(j.email.html);
+            const emailHtml = TEMP_PORTAL
+              ? j.email.html.replace(/(\/api\/email-attachments\/[^\s"'<>?]+)/g, '$1?portal=temporary')
+              : j.email.html;
+            iframe.srcdoc = wrapEmailHtml(emailHtml);
             body.appendChild(iframe);
 
             const note = document.createElement('div');
@@ -2123,6 +2149,11 @@ const PAGES = {
 
         async function logout(){
           stopAutoRefresh();
+          if(TEMP_PORTAL){
+            await fetch('/api/temp/logout',{method:'POST'});
+            location.href='/app';
+            return;
+          }
           await fetch('/api/auth/logout',{method:'POST'});
           location.href='/login';
         }
@@ -2233,9 +2264,18 @@ const PAGES = {
 
         (async ()=>{
           try{
+            if(TEMP_PORTAL){
+              const startResponse = await fetch('/api/temp/start', {method:'POST'});
+              const startResult = await startResponse.json().catch(()=>null);
+              if(!startResult || !startResult.ok){
+                throw new Error((startResult && startResult.error) || 'Gagal menyiapkan email sementara');
+              }
+            }
             await loadMe();
             await loadAliases();
-            try { await loadKeys(); } catch(_e) {}
+            if(!TEMP_PORTAL){
+              try { await loadKeys(); } catch(_e) {}
+            }
           }catch(e){
             const msg = String(e && e.message ? e.message : e);
             const aliasesBox = document.getElementById('aliases');
@@ -2923,8 +2963,8 @@ const PAGES = {
 };
 
 // -------------------- Auth/session helpers --------------------
-async function getUserBySession(request, env) {
-  const token = getCookie(request, "session");
+async function getUserBySession(request, env, cookieName = "session") {
+  const token = getCookie(request, cookieName);
   if (!token) return null;
 
   const tokenHash = await sha256Base64Url(encoder.encode(token));
@@ -2962,8 +3002,8 @@ async function createSession(env, userId, ttlSeconds) {
   return token;
 }
 
-async function destroySession(request, env) {
-  const token = getCookie(request, "session");
+async function destroySession(request, env, cookieName = "session") {
+  const token = getCookie(request, cookieName);
   if (!token) return;
 
   const tokenHash = await sha256Base64Url(encoder.encode(token));
@@ -3287,6 +3327,7 @@ export default {
       if (path === "/signup") return html(PAGES.signup());
       if (path === "/reset") return html(PAGES.reset());
       if (path === "/app") return html(PAGES.app(domains));
+      if (path === "/temporary") return html(PAGES.app(domains, true));
       if (path === "/admin") return html(PAGES.admin(domains));
     }
 
@@ -3527,8 +3568,8 @@ export default {
         // Auth required below
         // Mailbox sementara: tanpa daftar, kedaluwarsa otomatis 7 hari (public endpoint)
         if (path === "/api/temp/start" && request.method === "POST") {
-          // sudah punya sesi aktif (mailbox sementara / akun)? langsung pakai itu
-          const existing = await getUserBySession(request, env);
+          // Sesi sementara dipisahkan dari sesi akun agar keduanya bisa aktif bersamaan.
+          const existing = await getUserBySession(request, env, "temp_session");
           if (existing) return json({ ok: true, reused: true });
 
           const allowedDomainsTemp = await getAllowedDomains(env);
@@ -3607,11 +3648,23 @@ export default {
           return json(
             { ok: true, address: local + "@" + tempDomain, expires_at: t + TEMP_TTL_SECONDS },
             200,
-            { "set-cookie": setCookieHeader("session", token, { maxAge: TEMP_TTL_SECONDS, secure: cookieSecure }) }
+            { "set-cookie": setCookieHeader("temp_session", token, { maxAge: TEMP_TTL_SECONDS, secure: cookieSecure }) }
           );
         }
 
-        const me = (await getUserBySession(request, env)) || (await getUserByApiKey(request, env, ctx));
+        if (path === "/api/temp/logout" && request.method === "POST") {
+          await destroySession(request, env, "temp_session");
+          return json({ ok: true }, 200, {
+            "set-cookie": setCookieHeader("temp_session", "", { maxAge: 0, secure: cookieSecure }),
+          });
+        }
+
+        const temporaryMode =
+          request.headers.get("X-Mailbox-Mode") === "temporary" ||
+          url.searchParams.get("portal") === "temporary";
+        const me = temporaryMode
+          ? await getUserBySession(request, env, "temp_session")
+          : (await getUserBySession(request, env)) || (await getUserByApiKey(request, env, ctx));
         if (!me) return unauthorized();
 
         if (path.startsWith("/api/email-attachments/") && request.method === "GET") {
