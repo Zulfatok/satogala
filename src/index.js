@@ -1440,7 +1440,7 @@ const PAGES = {
             <div class="muted">Akun</div>
             <div id="me" style="margin-top:6px">...</div>
           </div>
-          <div id="aliasCreator">
+          <div id="aliasCreator"${temporaryPortal ? ' style="display:none"' : ''}>
             <div class="muted">Buat mail baru</div>
             <div style="margin-top:10px">
               <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px">
@@ -1456,7 +1456,7 @@ const PAGES = {
         </div>
       </div>
 
-      <div class="card" id="apiKeysPanel">
+      <div class="card" id="apiKeysPanel"${temporaryPortal ? ' style="display:none"' : ''}>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
           <b>API Keys</b>
           <span class="muted" style="font-size:12px">Akses tanpa cookie — untuk bot / integrasi</span>
@@ -1988,7 +1988,7 @@ const PAGES = {
             iframe.setAttribute('sandbox','allow-same-origin'); // no scripts
             iframe.setAttribute('referrerpolicy','no-referrer');
             const emailHtml = TEMP_PORTAL
-              ? j.email.html.replace(/(\/api\/email-attachments\/[^\s"'<>?]+)/g, '$1?portal=temporary')
+              ? j.email.html.replace(/(\\/api\\/email-attachments\\/[^\\s"'<>?]+)/g, '$1?portal=temporary')
               : j.email.html;
             iframe.srcdoc = wrapEmailHtml(emailHtml);
             body.appendChild(iframe);
