@@ -394,19 +394,24 @@ const LOGO_SVG = `
       <stop offset="0.52" stop-color="#2563eb"/>
       <stop offset="1" stop-color="#f6c76f"/>
     </linearGradient>
-    <linearGradient id="nmLogoText" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f8fafc"/>
-      <stop offset="1" stop-color="#7df4e7"/>
+    <linearGradient id="nmLogoPlane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#9ff7ec"/>
+    </linearGradient>
+    <linearGradient id="nmLogoPlaneShade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8be9dd"/>
+      <stop offset="1" stop-color="#3fb9ad"/>
     </linearGradient>
     <filter id="nmLogoShadow" x="-35%" y="-35%" width="170%" height="170%">
       <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#000" flood-opacity="0.38"/>
     </filter>
   </defs>
-  <rect x="8" y="8" width="48" height="48" rx="15" fill="url(#nmLogoBg)" filter="url(#nmLogoShadow)"/>
-  <rect x="13" y="13" width="38" height="38" rx="12" fill="rgba(5,9,16,0.78)" stroke="rgba(255,255,255,0.18)"/>
-  <path d="M19 23 H45" stroke="rgba(125,244,231,0.82)" stroke-width="2" stroke-linecap="round"/>
-  <path d="M19 43 H45" stroke="rgba(246,199,111,0.72)" stroke-width="2" stroke-linecap="round"/>
-  <text x="32" y="38" text-anchor="middle" font-size="15" font-family="ui-sans-serif,system-ui,Arial" fill="url(#nmLogoText)" font-weight="900">N_M</text>
+  <rect x="6" y="6" width="52" height="52" rx="17" fill="url(#nmLogoBg)" filter="url(#nmLogoShadow)"/>
+  <rect x="10.5" y="10.5" width="43" height="43" rx="13" fill="rgba(5,9,16,0.82)" stroke="rgba(255,255,255,0.22)"/>
+  <path d="M14 43 H23" stroke="rgba(125,244,231,0.6)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M17 48 H24" stroke="rgba(246,199,111,0.55)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M49 17 L16 32 L31 38 Z" fill="url(#nmLogoPlane)"/>
+  <path d="M49 17 L31 38 L38 47 Z" fill="url(#nmLogoPlaneShade)"/>
 </svg>
 `;
 const FAVICON_DATA = encodeURIComponent(`
@@ -417,16 +422,26 @@ const FAVICON_DATA = encodeURIComponent(`
       <stop offset="0.55" stop-color="#2563eb"/>
       <stop offset="1" stop-color="#f6c76f"/>
     </linearGradient>
-    <linearGradient id="nmFavText" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f8fafc"/>
-      <stop offset="1" stop-color="#7df4e7"/>
-    </linearGradient>
   </defs>
-  <rect x="8" y="8" width="48" height="48" rx="15" fill="url(#nmFavBg)"/>
-  <rect x="13" y="13" width="38" height="38" rx="12" fill="#070a10" opacity="0.78"/>
-  <text x="32" y="38" text-anchor="middle" font-size="15" font-family="Arial" fill="url(#nmFavText)" font-weight="900">N_M</text>
+  <rect x="6" y="6" width="52" height="52" rx="17" fill="url(#nmFavBg)"/>
+  <rect x="11" y="11" width="42" height="42" rx="13" fill="#070a10" opacity="0.8"/>
+  <path d="M49 17 L16 32 L31 38 Z" fill="#eafffb"/>
+  <path d="M49 17 L31 38 L38 47 Z" fill="#7df4e7"/>
 </svg>
 `);
+
+// -------------------- Mailbox sementara (temporary) --------------------
+// Tanpa daftar, kedaluwarsa otomatis setelah 7 hari.
+const TEMP_TTL_SECONDS = 7 * 86400;
+
+function randomLocalPart(len = 10) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(len));
+  let s = "";
+  for (let i = 0; i < len; i++) s += chars[bytes[i] % 36];
+  if (!/^[a-z]/.test(s)) s = "m" + s.slice(1);
+  return s;
+}
 
 function headerHtml({ badge, subtitle, rightHtml = "" }) {
   return `
@@ -442,6 +457,116 @@ function headerHtml({ badge, subtitle, rightHtml = "" }) {
     <div class="hdrRight">${rightHtml}</div>
   </header>`;
 }
+
+// Gaya khusus halaman auth (login/signup/reset) — form terpusat di tengah layar
+const AUTH_CSS = `
+  <style>
+    body .wrap{max-width:none;padding:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+    .authShell{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:44px 18px 36px;position:relative;
+    }
+    .authShell::before{
+      content:"";position:absolute;left:50%;top:50%;width:560px;height:560px;max-width:92vw;
+      transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:0;
+      background:radial-gradient(circle, rgba(56,213,200,.13), rgba(246,199,111,.05) 45%, transparent 68%);
+      filter:blur(52px);
+    }
+    .authBrand{
+      display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:20px;
+      position:relative;z-index:1;text-align:center;
+      animation:fadeDown var(--dur-lg) var(--ease-out) both;
+    }
+    .authBrand .logo svg{width:62px;height:62px}
+    .authBrand .logo{filter:drop-shadow(0 12px 28px rgba(56,213,200,.38))}
+    .authBrandName{
+      font-weight:900;font-size:25px;letter-spacing:2.4px;
+      background:linear-gradient(110deg,#ffffff 0%,#7df4e7 25%,#38d5c8 42%,#ffdd97 60%,#ffffff 80%);
+      background-size:200% 100%;
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      animation:brandShimmer 7s linear infinite;
+    }
+    .authBrandSub{color:var(--muted);font-size:13px;margin-top:-4px}
+    .card.authCard{width:100%;max-width:420px;margin:0;padding:30px 28px 24px;position:relative;z-index:1}
+    .card.authCard + .card.authCard{margin-top:14px}
+    .authTitle{margin:0 0 5px;font-size:20px;font-weight:700;text-align:center;letter-spacing:.2px}
+    .authSub{margin:0 0 20px;color:var(--muted);font-size:13.5px;text-align:center}
+    .authField{margin-bottom:14px;text-align:left}
+    .authBtn{width:100%;margin-top:4px;padding:13px 17px;font-size:15px}
+    .authLinks{margin-top:14px;text-align:center;font-size:13px}
+    .authAlt{
+      margin-top:18px;color:var(--muted);font-size:13.5px;text-align:center;
+      position:relative;z-index:1;animation:fadeIn var(--dur-lg) var(--ease-out) .25s both;
+    }
+    .authAlt a{font-weight:600}
+    .card.authCard pre{white-space:pre-wrap;word-break:break-word;margin:10px 0 0;font-size:12.5px;text-align:center}
+    /* ===== pop-up modal (akun diblokir) ===== */
+    .modalOverlay{
+      position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+      background:rgba(3,5,9,.68);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+      padding:18px;animation:fadeIn .18s var(--ease) both;
+    }
+    .modalOverlay[hidden]{display:none}
+    .modalCard{
+      width:100%;max-width:370px;text-align:center;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 50%, rgba(0,0,0,.14)),
+        var(--card2);
+      border:1px solid rgba(240,97,109,.42);
+      border-radius:var(--r-xl);padding:30px 26px 24px;
+      box-shadow:0 30px 90px rgba(0,0,0,.6), 0 0 46px rgba(240,97,109,.14), inset 0 1px 0 rgba(255,255,255,.10);
+      animation:popIn .32s var(--ease-out) both;
+    }
+    @keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.93)}to{opacity:1;transform:none}}
+    .modalIcon{
+      width:66px;height:66px;margin:0 auto 14px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-size:30px;
+      background:rgba(240,97,109,.14);border:1px solid rgba(240,97,109,.42);
+      box-shadow:0 0 32px rgba(240,97,109,.26);
+      animation:popIn .4s var(--ease-out) .06s both;
+    }
+    .modalTitle{margin:0 0 8px;font-size:19px;font-weight:800;color:#ffd9dd;letter-spacing:.3px}
+    .modalMsg{margin:0 0 20px;color:var(--muted);font-size:13.5px;line-height:1.65}
+    .modalBtn{
+      width:100%;padding:12px 17px;font-weight:700;
+      background:linear-gradient(135deg, rgba(240,97,109,.32), rgba(246,199,111,.16));
+      border-color:rgba(240,97,109,.52);color:#ffeef0;
+    }
+    .modalBtn:hover{border-color:rgba(240,97,109,.75);background:linear-gradient(135deg, rgba(240,97,109,.42), rgba(246,199,111,.2))}
+    @media (max-width:480px){
+      .card.authCard{padding:24px 20px 20px}
+      .authShell{padding:32px 14px 28px}
+    }
+  </style>`;
+
+// Gaya tambahan khusus halaman awal (pilihan mailbox sementara / email permanent)
+const LANDING_CSS = AUTH_CSS + `
+  <style>
+    .choiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:780px;position:relative;z-index:1}
+    .choiceGrid .authCard{max-width:none}
+    .choiceCard{display:flex;flex-direction:column;align-items:stretch;text-align:center}
+    .choicePrimary{
+      border-color:rgba(56,213,200,.5);
+      box-shadow:var(--shadow-lg), 0 0 44px rgba(56,213,200,.15), inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .choiceIcon{
+      width:54px;height:54px;margin:0 auto 12px;border-radius:16px;font-size:24px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(56,213,200,.12);border:1px solid rgba(56,213,200,.35);
+      box-shadow:0 0 26px rgba(56,213,200,.18);
+    }
+    .choiceList{list-style:none;margin:0 0 18px;padding:0;color:var(--muted);font-size:13px;line-height:2.05;text-align:left;flex:1}
+    a.authBtn{
+      display:flex;align-items:center;justify-content:center;text-decoration:none;
+      padding:13px 17px;border-radius:var(--r-md);font-weight:600;letter-spacing:.2px;
+      border:1px solid rgba(56,213,200,.48);color:#eafffb;
+      background:linear-gradient(135deg, rgba(56,213,200,.30), rgba(246,199,111,.20));
+      box-shadow:0 12px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.14);
+      transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease);
+    }
+    a.authBtn:hover{transform:translateY(-2px);border-color:rgba(56,213,200,.72);color:#ffffff;box-shadow:var(--shadow-md)}
+    @media (max-width:720px){.choiceGrid{grid-template-columns:1fr;max-width:420px}}
+  </style>`;
 
 function pageTemplate(title, body, extraHead = "") {
   return `<!doctype html>
@@ -589,9 +714,29 @@ function pageTemplate(title, body, extraHead = "") {
     .logo{display:flex;align-items:center;filter:drop-shadow(0 6px 16px rgba(56,213,200,.25));transition:transform var(--dur) var(--ease)}
     .logo:hover{transform:translateY(-1px) rotate(-2deg)}
     .brandText{display:flex;flex-direction:column;line-height:1.05}
-    .brandName{font-weight:800;letter-spacing:.4px;font-size:16px;background:linear-gradient(90deg,#ffffff,#cfeee9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brandName{
+      font-weight:900;letter-spacing:1.4px;font-size:16.5px;
+      background:linear-gradient(110deg,#ffffff 0%,#7df4e7 25%,#38d5c8 42%,#ffdd97 60%,#ffffff 80%);
+      background-size:200% 100%;
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      animation:brandShimmer 7s linear infinite;
+    }
+    @keyframes brandShimmer{from{background-position:0% 0}to{background-position:-200% 0}}
     .brandSub{color:var(--muted);font-size:12.5px;margin-top:3px}
     .hdrRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+    /* ===== banner mailbox sementara ===== */
+    .tempBanner{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      margin:14px 0 0;padding:12px 16px;
+      border:1px solid rgba(246,199,111,.42);border-radius:var(--r-lg);
+      background:linear-gradient(135deg, rgba(246,199,111,.13), rgba(56,213,200,.06));
+      box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.08);
+      font-size:13.5px;
+      animation:fadeInUp var(--dur-lg) var(--ease-out) both;
+    }
+    .tempBannerIcon{font-size:20px}
+    .tempBannerText{flex:1;min-width:200px;color:var(--text)}
 
     /* ===== card ===== */
     .card{
@@ -882,36 +1027,120 @@ function pageTemplate(title, body, extraHead = "") {
 
 // -------------------- Pages --------------------
 const PAGES = {
+  landing() {
+    return pageTemplate(
+      "N_MAZY — Email instan, tanpa ribet",
+      `
+      <div class="authShell">
+        <div class="authBrand">
+          <div class="logo">${LOGO_SVG}</div>
+          <div class="authBrandName">N_MAZY</div>
+          <div class="authBrandSub">Mail Portal • Email instan, tanpa ribet</div>
+        </div>
+
+        <div class="choiceGrid">
+          <div class="card authCard choiceCard choicePrimary">
+            <div class="choiceIcon">⚡</div>
+            <h1 class="authTitle">Email Sementara</h1>
+            <p class="authSub">Langsung jadi, tanpa daftar</p>
+            <ul class="choiceList">
+              <li>✓ Tanpa daftar &amp; tanpa password</li>
+              <li>✓ Alamat acak langsung aktif</li>
+              <li>✓ Terima email di inbox real-time</li>
+              <li>⏳ Kedaluwarsa otomatis dalam 7 hari</li>
+            </ul>
+            <button id="tempBtn" class="btn-primary authBtn" onclick="startTemp()">⚡ Buat Email Sementara</button>
+            <pre id="out" class="muted"></pre>
+          </div>
+
+          <div class="card authCard choiceCard">
+            <div class="choiceIcon">🔐</div>
+            <h1 class="authTitle">Email Permanent</h1>
+            <p class="authSub">Daftar akun, mail tersimpan permanen</p>
+            <ul class="choiceList">
+              <li>✓ Alamat pilihanmu sendiri</li>
+              <li>✓ Bisa beberapa alamat sekaligus</li>
+              <li>✓ Reset password via email</li>
+              <li>✓ Tidak kedaluwarsa</li>
+            </ul>
+            <a class="authBtn" href="/signup">🔐 Daftar Akun</a>
+            <div class="authLinks"><a href="/login" class="muted">Sudah punya akun? Login</a></div>
+          </div>
+        </div>
+
+        <div class="authAlt">Punya mailbox aktif di perangkat ini? Kamu akan diarahkan otomatis ke inbox.</div>
+      </div>
+
+      <script>
+        // Sudah punya sesi aktif (mailbox sementara / akun)? langsung ke inbox.
+        fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){
+          if (j && j.ok) location.href = '/app';
+        }).catch(function(){});
+
+        async function startTemp(){
+          const btn = document.getElementById('tempBtn');
+          const out = document.getElementById('out');
+          btn.disabled = true; btn.textContent = 'Menyiapkan mailbox...';
+          out.textContent = '';
+          try{
+            const r = await fetch('/api/temp/start', { method: 'POST' });
+            const j = await r.json().catch(function(){ return null; });
+            if (j && j.ok){ location.href = '/app'; return; }
+            out.textContent = (j && j.error) || 'gagal';
+          }catch(e){
+            out.textContent = 'gagal';
+          }
+          btn.disabled = false; btn.textContent = '⚡ Buat Email Sementara';
+        }
+      </script>
+      `,
+      LANDING_CSS
+    );
+  },
+
   login() {
     return pageTemplate(
       "Login",
       `
-      ${headerHtml({
-        badge: "Login",
-        subtitle: "Mail Portal • Kelola mail & inbox",
-        rightHtml: `<a class="pill" href="/signup">Buat akun</a>`,
-      })}
+      <div class="authShell">
+        <div class="authBrand">
+          <div class="logo">${LOGO_SVG}</div>
+          <div class="authBrandName">N_MAZY</div>
+          <div class="authBrandSub">Mail Portal • Kelola mail & inbox</div>
+        </div>
 
-      <div class="card">
-        <div class="row">
-          <div>
+        <div class="card authCard">
+          <h1 class="authTitle">Selamat datang kembali 👋</h1>
+          <p class="authSub">Masuk ke akunmu untuk melanjutkan</p>
+
+          <div class="authField">
             <label>Username / Email</label>
             <input id="id" placeholder="sipar / sipar@gmail.com" autocomplete="username" />
           </div>
-          <div>
+          <div class="authField">
             <label>Password</label>
             <div class="pwWrap">
               <input id="pw" type="password" placeholder="••••••••" autocomplete="current-password" />
               <button type="button" class="pwToggle" onclick="togglePw('pw', this)">Show</button>
             </div>
           </div>
+
+          <button class="btn-primary authBtn" onclick="login()">Login</button>
+          <div class="authLinks"><a href="/reset" class="muted">Lupa password?</a></div>
+          <pre id="out" class="muted"></pre>
         </div>
 
-        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-          <button class="btn-primary" onclick="login()">Login</button>
-          <a href="/reset" class="muted">Lupa password?</a>
+        <div class="authAlt">Belum punya akun? <a href="/signup">Buat akun</a></div>
+        <div class="authAlt" style="margin-top:8px"><a href="/">⚡ Atau pakai email sementara — tanpa daftar</a></div>
+      </div>
+
+      <div id="blockModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="blockTitle" hidden>
+        <div class="modalCard">
+          <div class="modalIcon">🚫</div>
+          <h2 id="blockTitle" class="modalTitle">Akun Diblokir</h2>
+          <p class="modalMsg">Akun kamu telah dikunci oleh admin, jadi untuk sementara tidak bisa dipakai login.<br/>Kalau merasa ini kesalahan, silakan hubungi admin ya.</p>
+          <button type="button" class="modalBtn" onclick="closeBlockModal()">Mengerti</button>
         </div>
-        <pre id="out" class="muted"></pre>
       </div>
 
       <script>
@@ -943,10 +1172,34 @@ const PAGES = {
           });
           const j = await readJsonOrText(r);
           if(j.ok){ location.href='/app'; return; }
+          if(j.blocked){ out.textContent=''; showBlockModal(); return; }
           out.textContent = j.error || 'gagal';
         }
+        // Pop-up akun diblokir
+        function showBlockModal(){
+          const m = document.getElementById('blockModal');
+          m.hidden = false;
+          const btn = m.querySelector('.modalBtn');
+          if(btn) btn.focus();
+        }
+        function closeBlockModal(){
+          document.getElementById('blockModal').hidden = true;
+        }
+        document.getElementById('blockModal').addEventListener('click', function(e){
+          if(e.target === this) closeBlockModal();
+        });
+        document.addEventListener('keydown', function(e){
+          if(e.key === 'Escape') closeBlockModal();
+        });
+        // Tekan Enter untuk langsung login
+        ['id','pw'].forEach(function(fid){
+          document.getElementById(fid).addEventListener('keydown', function(e){
+            if(e.key === 'Enter') login();
+          });
+        });
       </script>
-      `
+      `,
+      AUTH_CSS
     );
   },
 
@@ -954,48 +1207,46 @@ const PAGES = {
     return pageTemplate(
       "Signup",
       `
-      ${headerHtml({
-        badge: "Signup",
-        subtitle: "Buat akun baru",
-        /*
-        subtitle: "Buat akun • Pilih domain",
-        */
-        rightHtml: `<a class="pill" href="/login">Login</a>`,
-      })}
+      <div class="authShell">
+        <div class="authBrand">
+          <div class="logo">${LOGO_SVG}</div>
+          <div class="authBrandName">N_MAZY</div>
+          <div class="authBrandSub">Mail Portal • Kelola mail & inbox</div>
+        </div>
 
-      <div class="card">
-        <div class="row">
-          <div>
+        <div class="card authCard">
+          <h1 class="authTitle">Buat akun baru ✨</h1>
+          <p class="authSub">Gratis dan cuma butuh beberapa detik</p>
+
+          <div class="authField">
             <label>Username</label>
             <input id="u" placeholder="sipar" autocomplete="username" />
           </div>
-          <div>
+          <div class="authField">
             <label>Email (untuk reset password)</label>
             <input id="e" placeholder="sipar@gmail.com" autocomplete="email" />
           </div>
-        </div>
-
-        <div class="row" style="margin-top:12px">
-          <div>
+          <div class="authField">
             <label>Password</label>
             <div class="pwWrap">
               <input id="pw" type="password" placeholder="minimal 8 karakter" autocomplete="new-password" />
               <button type="button" class="pwToggle" onclick="togglePw('pw', this)">Show</button>
             </div>
           </div>
-          <div>
+          <div class="authField">
             <label>Konfirmasi Password</label>
             <div class="pwWrap">
               <input id="pwConfirm" type="password" placeholder="ulangi password" autocomplete="new-password" />
               <button type="button" class="pwToggle" onclick="togglePw('pwConfirm', this)">Show</button>
             </div>
           </div>
+
+          <button class="btn-primary authBtn" onclick="signup()">Buat Akun</button>
+          <pre id="out" class="muted"></pre>
         </div>
 
-        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-          <button class="btn-primary" onclick="signup()">Buat Akun</button>
-        </div>
-        <pre id="out" class="muted"></pre>
+        <div class="authAlt">Sudah punya akun? <a href="/login">Login</a></div>
+        <div class="authAlt" style="margin-top:8px"><a href="/">⚡ Atau pakai email sementara — tanpa daftar</a></div>
       </div>
 
       <script>
@@ -1035,8 +1286,15 @@ const PAGES = {
           if(j.ok){ location.href='/app'; return; }
           out.textContent = j.error || 'gagal';
         }
+        // Tekan Enter untuk langsung daftar
+        ['u','e','pw','pwConfirm'].forEach(function(fid){
+          document.getElementById(fid).addEventListener('keydown', function(ev){
+            if(ev.key === 'Enter') signup();
+          });
+        });
       </script>
-      `
+      `,
+      AUTH_CSS
     );
   },
 
@@ -1044,40 +1302,45 @@ const PAGES = {
     return pageTemplate(
       "Reset Password",
       `
-      ${headerHtml({
-        badge: "Reset",
-        subtitle: "Kirim token reset / set password baru",
-        rightHtml: `<a class="pill" href="/login">Login</a>`,
-      })}
-
-      <div class="card">
-        <label>Email akun</label>
-        <input id="e" placeholder="sipar@gmail.com" autocomplete="email" />
-        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-          <button class="btn-primary" onclick="reqReset()">Kirim Token</button>
+      <div class="authShell">
+        <div class="authBrand">
+          <div class="logo">${LOGO_SVG}</div>
+          <div class="authBrandName">N_MAZY</div>
+          <div class="authBrandSub">Mail Portal • Kelola mail & inbox</div>
         </div>
-        <pre id="out" class="muted"></pre>
-      </div>
 
-      <div class="card">
-        <div class="muted">Punya token?</div>
-        <div class="row" style="margin-top:10px">
-          <div>
+        <div class="card authCard">
+          <h1 class="authTitle">Reset Password 🔑</h1>
+          <p class="authSub">Masukkan email akunmu, token reset akan dikirim</p>
+
+          <div class="authField">
+            <label>Email akun</label>
+            <input id="e" placeholder="sipar@gmail.com" autocomplete="email" />
+          </div>
+          <button class="btn-primary authBtn" onclick="reqReset()">Kirim Token</button>
+          <pre id="out" class="muted"></pre>
+        </div>
+
+        <div class="card authCard">
+          <h2 class="authTitle">Sudah punya token?</h2>
+          <p class="authSub">Masukkan token dan password barumu</p>
+
+          <div class="authField">
             <label>Token</label>
             <input id="t" placeholder="token dari email" />
           </div>
-          <div>
+          <div class="authField">
             <label>Password baru</label>
             <div class="pwWrap">
               <input id="npw" type="password" placeholder="••••••••" autocomplete="new-password" />
               <button type="button" class="pwToggle" onclick="togglePw('npw', this)">Show</button>
             </div>
           </div>
+          <button class="btn-primary authBtn" onclick="confirmReset()">Set Password</button>
+          <pre id="out2" class="muted"></pre>
         </div>
-        <div style="margin-top:12px">
-          <button class="btn-primary" onclick="confirmReset()">Set Password</button>
-        </div>
-        <pre id="out2" class="muted"></pre>
+
+        <div class="authAlt">Ingat password? <a href="/login">Login</a></div>
       </div>
 
       <script>
@@ -1136,7 +1399,8 @@ const PAGES = {
           out.textContent = j.ok ? 'Password diubah. Silakan login.' : (j.error || 'gagal');
         }
       </script>
-      `
+      `,
+      AUTH_CSS
     );
   },
 
@@ -1154,6 +1418,14 @@ const PAGES = {
           <button class="danger" onclick="logout()">Logout</button>
         `,
       })}
+
+      <div id="tempBanner" class="tempBanner" style="display:none">
+        <span class="tempBannerIcon">⏳</span>
+        <div class="tempBannerText">
+          <b>Mailbox sementara</b> — berakhir <b id="tempExp">...</b>. Setelah itu alamat &amp; semua mail terhapus otomatis.
+        </div>
+        <a class="pill" href="/signup">Daftar biar permanen</a>
+      </div>
 
       <div class="card" id="accountPanel">
         <div class="row">
@@ -1370,11 +1642,28 @@ const PAGES = {
               return;
             }
             ME=j.user;
-            meBox.innerHTML =
-              '<div><b>'+esc(ME.username)+'</b> <span class="muted">('+esc(ME.email)+')</span></div>'+
-              '<div class="muted" style="margin-top:4px">role: '+esc(ME.role)+'</div>';
+            if(ME.temp){
+              meBox.innerHTML =
+                '<div><b>Mailbox Sementara</b> <span class="pill" style="background:rgba(246,199,111,.15);border-color:rgba(246,199,111,.4)">⏳ 7 hari</span></div>'+
+                '<div class="muted" style="margin-top:4px">tanpa akun • terhapus otomatis saat kedaluwarsa</div>';
+            } else {
+              meBox.innerHTML =
+                '<div><b>'+esc(ME.username)+'</b> <span class="muted">('+esc(ME.email)+')</span></div>'+
+                '<div class="muted" style="margin-top:4px">role: '+esc(ME.role)+'</div>';
+            }
             document.getElementById('limitInfo').textContent = 'limit: '+ME.alias_limit;
             if(ME.role==='admin') document.getElementById('adminLink').style.display='inline-flex';
+            if(ME.temp){
+              const tb = document.getElementById('tempBanner');
+              if(tb){
+                tb.style.display='flex';
+                if(ME.temp_expires_at){
+                  const d = new Date(ME.temp_expires_at*1000);
+                  const el = document.getElementById('tempExp');
+                  if(el) el.textContent = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+                }
+              }
+            }
           }catch(e){
             meBox.innerHTML =
               '<div style="color:#fca5a5;font-weight:700">Gagal load akun</div>'+
@@ -2226,8 +2515,8 @@ const PAGES = {
                   '<div class="userName">'+esc(u.username)+'</div>'+
                   '<div class="userEmail">'+esc(u.email)+'</div>'+
                   '<div class="userBadges">'+
-                    (u.role==='admin' ? '<span class="pill" style="background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4)">admin</span>' : '<span class="pill">user</span>')+
-                    (u.disabled ? '<span class="pill" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4)">disabled</span>' : '')+
+                    (u.role==='admin' ? '<span class="pill" style="background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4)">admin</span>' : (u.role==='temp' ? '<span class="pill" style="background:rgba(246,199,111,.15);border-color:rgba(246,199,111,.4)">⏳ sementara</span>' : '<span class="pill">user</span>'))+
+                    (u.disabled ? '<span class="pill" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4)">🚫 diblokir</span>' : '')+
                     '<span class="pill">'+u.alias_count+' mail</span>'+
                   '</div>'+
                 '</div>'+
@@ -2239,7 +2528,7 @@ const PAGES = {
                   '<button class="btn-primary" onclick="setLimit(\\''+esc(u.id)+'\\')">Update</button>'+
                 '</div>'+
                 '<button onclick="toggleAliases(\\''+esc(u.id)+'\\')" class="btn-ghost">📧 Lihat Mail</button>'+
-                '<button onclick="toggleUser(\\''+esc(u.id)+'\\','+(u.disabled?0:1)+')" class="'+(u.disabled?'btn-primary':'danger')+'">'+(u.disabled?'✓ Enable':'✕ Disable')+'</button>'+
+                '<button onclick="toggleUser(\\''+esc(u.id)+'\\','+(u.disabled?0:1)+')" class="'+(u.disabled?'btn-primary':'danger')+'">'+(u.disabled?'🔓 Buka Blokir':'🚫 Blokir')+'</button>'+
                 '<button onclick="delUser(\\''+encodeURIComponent(u.id)+'\\')" class="danger">🗑 Delete</button>'+
               '</div>'+
               '<div id="aliases_'+esc(u.id)+'" style="display:none;margin-top:14px"></div>';
@@ -2306,12 +2595,14 @@ const PAGES = {
         }
 
         async function toggleUser(id, disabled){
+          if(disabled === 1 && !confirm('🚫 Blokir user ini?\\n\\n• User tidak bisa login lagi\\n• Session aktifnya langsung terputus\\n• Saat coba login, dia akan melihat pop-up "Akun Diblokir"\\n\\nKamu bisa membuka blokirnya kapan saja.')) return;
           const j = await api('/api/admin/users/'+encodeURIComponent(id), {
             method:'PATCH',
             headers:{'content-type':'application/json'},
             body:JSON.stringify({disabled})
           });
           if(!j.ok){ alert(j.error||'gagal'); return; }
+          alert(disabled === 1 ? 'User berhasil diblokir.' : 'Blokir user dibuka.');
           await loadUsers();
         }
 
@@ -2639,7 +2930,8 @@ async function getUserBySession(request, env) {
   const tokenHash = await sha256Base64Url(encoder.encode(token));
   const row = await env.DB.prepare(
     `SELECT s.user_id as user_id, u.id as id, u.username as username, u.email as email,
-            u.role as role, u.alias_limit as alias_limit, u.disabled as disabled
+            u.role as role, u.alias_limit as alias_limit, u.disabled as disabled,
+            u.created_at as created_at
      FROM sessions s
      JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = ? AND s.expires_at > ?`
@@ -2649,6 +2941,8 @@ async function getUserBySession(request, env) {
 
   if (!row) return null;
   if (row.disabled) return null;
+  // mailbox sementara yang lewat 7 hari dianggap tidak ada lagi
+  if (row.role === "temp" && nowSec() > Number(row.created_at || 0) + TEMP_TTL_SECONDS) return null;
   return row;
 }
 
@@ -2676,13 +2970,24 @@ async function destroySession(request, env) {
   await env.DB.prepare(`DELETE FROM sessions WHERE token_hash = ?`).bind(tokenHash).run();
 }
 
-async function cleanupExpired(env) {
+async function cleanupExpired(env, ctx) {
   const t = nowSec();
   try {
     await env.DB.prepare(`DELETE FROM sessions WHERE expires_at <= ?`).bind(t).run();
   } catch { }
   try {
     await env.DB.prepare(`DELETE FROM reset_tokens WHERE expires_at <= ?`).bind(t).run();
+  } catch { }
+  // hapus mailbox sementara yang kedaluwarsa (maks 3 per request supaya tetap ringan)
+  try {
+    const r = await env.DB.prepare(
+      `SELECT id FROM users WHERE role = 'temp' AND created_at <= ? LIMIT 3`
+    )
+      .bind(t - TEMP_TTL_SECONDS)
+      .all();
+    for (const row of r.results || []) {
+      await deleteUserCascade(env, row.id, ctx);
+    }
   } catch { }
 }
 
@@ -2968,7 +3273,7 @@ async function sendResetEmail(env, toEmail, token) {
 // -------------------- Worker entry --------------------
 export default {
   async fetch(request, env, ctx) {
-    ctx.waitUntil(cleanupExpired(env));
+    ctx.waitUntil(cleanupExpired(env, ctx));
 
     const url = new URL(request.url);
     const path = url.pathname;
@@ -2977,7 +3282,8 @@ export default {
     // Pages
     if (request.method === "GET") {
       const domains = await getAllowedDomains(env);
-      if (path === "/" || path === "/login") return html(PAGES.login());
+      if (path === "/") return html(PAGES.landing());
+      if (path === "/login") return html(PAGES.login());
       if (path === "/signup") return html(PAGES.signup());
       if (path === "/reset") return html(PAGES.reset());
       if (path === "/app") return html(PAGES.app(domains));
@@ -3103,7 +3409,7 @@ export default {
               .bind(id, id)
               .first();
 
-          if (!user || user.disabled) return unauthorized("Login gagal");
+          if (!user) return unauthorized("Login gagal");
 
           const saltBytes = base64UrlToBytes(user.pass_salt);
           const iters = hasIters ? safeInt(user.pass_iters, pbkdf2Iters(env)) : pbkdf2Iters(env);
@@ -3123,6 +3429,12 @@ export default {
           }
 
           if (hash !== user.pass_hash) return unauthorized("Login gagal");
+
+          // Akun dikunci/diblokir admin → respons khusus agar halaman login bisa menampilkan pop-up.
+          // Dicek SETELAH password valid supaya status blokir tidak bocor ke orang yang menebak akun.
+          if (user.disabled) {
+            return json({ ok: false, error: "Akun kamu diblokir oleh admin", blocked: true }, 403);
+          }
 
           const ttl = safeInt(env.SESSION_TTL_SECONDS, 1209600);
           const token = await createSession(env, user.id, ttl);
@@ -3213,6 +3525,92 @@ export default {
         }
 
         // Auth required below
+        // Mailbox sementara: tanpa daftar, kedaluwarsa otomatis 7 hari (public endpoint)
+        if (path === "/api/temp/start" && request.method === "POST") {
+          // sudah punya sesi aktif (mailbox sementara / akun)? langsung pakai itu
+          const existing = await getUserBySession(request, env);
+          if (existing) return json({ ok: true, reused: true });
+
+          const allowedDomainsTemp = await getAllowedDomains(env);
+          const tempDomain = allowedDomainsTemp[0] || env.DOMAIN || "";
+          if (!tempDomain) return badRequest("Domain belum dikonfigurasi");
+
+          const hasDomainTemp = await aliasesHasDomain(env);
+          const hasItersTemp = await usersHasPassIters(env);
+
+          const iters = pbkdf2Iters(env);
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const pass_salt = base64Url(salt);
+          // password acak yang tidak diketahui siapa pun — mailbox sementara tidak bisa login manual
+          const randomPw = base64Url(crypto.getRandomValues(new Uint8Array(32)));
+          const pass_hash = await pbkdf2HashBase64Url(randomPw, salt, iters);
+
+          const t = nowSec();
+          const id = crypto.randomUUID();
+
+          let local = "";
+          let createdUser = false;
+          for (let attempt = 0; attempt < 4 && !createdUser; attempt++) {
+            local = randomLocalPart(10);
+            const username = "temp_" + local;
+            const placeholderEmail = username + "@temp.invalid";
+            try {
+              if (hasItersTemp) {
+                await env.DB.prepare(
+                  `INSERT INTO users (id, username, email, pass_salt, pass_hash, pass_iters, role, alias_limit, disabled, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, 'temp', 1, 0, ?)`
+                )
+                  .bind(id, username, placeholderEmail, pass_salt, pass_hash, iters, t)
+                  .run();
+              } else {
+                await env.DB.prepare(
+                  `INSERT INTO users (id, username, email, pass_salt, pass_hash, role, alias_limit, disabled, created_at)
+                   VALUES (?, ?, ?, ?, ?, 'temp', 1, 0, ?)`
+                )
+                  .bind(id, username, placeholderEmail, pass_salt, pass_hash, t)
+                  .run();
+              }
+              createdUser = true;
+            } catch (e) {
+              const msg = String(e && e.message ? e.message : e);
+              if (!msg.toUpperCase().includes("UNIQUE")) {
+                console.log("temp user db error:", msg);
+                return json({ ok: false, error: "DB error" }, 500);
+              }
+            }
+          }
+          if (!createdUser) return json({ ok: false, error: "Gagal membuat mailbox, coba lagi" }, 500);
+
+          try {
+            if (hasDomainTemp) {
+              await env.DB.prepare(
+                `INSERT INTO aliases (local_part, domain, user_id, disabled, created_at)
+                 VALUES (?, ?, ?, 0, ?)`
+              )
+                .bind(local, tempDomain, id, t)
+                .run();
+            } else {
+              await env.DB.prepare(
+                `INSERT INTO aliases (local_part, user_id, disabled, created_at)
+                 VALUES (?, ?, 0, ?)`
+              )
+                .bind(local, id, t)
+                .run();
+            }
+          } catch (e) {
+            // alamat bentrok dengan alias user lain → bersihkan user tadi, minta coba lagi
+            await env.DB.prepare(`DELETE FROM users WHERE id = ?`).bind(id).run();
+            return json({ ok: false, error: "Alamat bentrok, coba lagi" }, 500);
+          }
+
+          const token = await createSession(env, id, TEMP_TTL_SECONDS);
+          return json(
+            { ok: true, address: local + "@" + tempDomain, expires_at: t + TEMP_TTL_SECONDS },
+            200,
+            { "set-cookie": setCookieHeader("session", token, { maxAge: TEMP_TTL_SECONDS, secure: cookieSecure }) }
+          );
+        }
+
         const me = (await getUserBySession(request, env)) || (await getUserByApiKey(request, env, ctx));
         if (!me) return unauthorized();
 
@@ -3226,6 +3624,7 @@ export default {
         }
 
         if (path === "/api/me" && request.method === "GET") {
+          const isTemp = me.role === "temp";
           return json({
             ok: true,
             user: {
@@ -3234,6 +3633,9 @@ export default {
               email: me.email,
               role: me.role,
               alias_limit: me.alias_limit,
+              temp: isTemp,
+              temp_expires_at:
+                isTemp && me.created_at ? Number(me.created_at) + TEMP_TTL_SECONDS : null,
             },
           });
         }
@@ -3767,6 +4169,11 @@ export default {
             return badRequest("disabled invalid");
           }
 
+          // Jangan biarkan admin memblokir akunnya sendiri
+          if (disabled === 1 && userId === me.id) {
+            return badRequest("Tidak bisa memblokir akun sendiri");
+          }
+
           const sets = [];
           const binds = [];
           if (alias_limit !== undefined) {
@@ -3841,7 +4248,7 @@ export default {
       const row = hasAliasDomain
         ? await env.DB.prepare(
           `SELECT a.local_part as local_part, a.domain as domain, a.user_id as user_id, a.disabled as alias_disabled,
-                  u.disabled as user_disabled
+                  u.disabled as user_disabled, u.role as user_role, u.created_at as user_created
            FROM aliases a
            JOIN users u ON u.id = a.user_id
            WHERE a.local_part = ? AND a.domain = ?`
@@ -3850,7 +4257,7 @@ export default {
           .first()
         : await env.DB.prepare(
           `SELECT a.local_part as local_part, a.user_id as user_id, a.disabled as alias_disabled,
-                  u.disabled as user_disabled
+                  u.disabled as user_disabled, u.role as user_role, u.created_at as user_created
            FROM aliases a
            JOIN users u ON u.id = a.user_id
            WHERE a.local_part = ?`
@@ -3860,6 +4267,12 @@ export default {
 
       if (!row || row.alias_disabled || row.user_disabled) {
         message.setReject("Unknown recipient");
+        return;
+      }
+
+      // mailbox sementara yang sudah kedaluwarsa tidak menerima email lagi
+      if (row.user_role === "temp" && nowSec() > Number(row.user_created || 0) + TEMP_TTL_SECONDS) {
+        message.setReject("Mailbox expired");
         return;
       }
 
