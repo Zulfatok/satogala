@@ -29,16 +29,20 @@ jobs:
           npx wrangler@latest d1 list
           npx wrangler@latest d1 execute maail_portal --file=./schema.sql --remote
 
-      # Resolve the SQL placeholder from wrangler.toml, then repair legacy domains.
+      # Verify migration target matches wrangler.toml, then repair legacy domains.
       - name: Run Database Migration
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           PRIMARY_DOMAIN=$(node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.toml','utf8');const m=s.match(/^DOMAIN\\s*=\\s*[\"']([^\"']+)[\"']/m);const d=m&&m[1].trim().toLowerCase();const ok=d&&d.length<=253&&/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(d);if(!ok){console.error('DOMAIN missing or invalid in wrangler.toml');process.exit(1)}process.stdout.write(d)")
+          MIGRATION_DOMAIN=$(node -e "const fs=require('fs');const s=fs.readFileSync('migration.sql','utf8');const m=s.match(/^-- Target domain:\\s*(\\S+)\\s*$/m);if(!m){console.error('Migration target missing');process.exit(1)}process.stdout.write(m[1].toLowerCase())")
+          if [ "$PRIMARY_DOMAIN" != "$MIGRATION_DOMAIN" ]; then
+            echo "DOMAIN mismatch: wrangler=$PRIMARY_DOMAIN migration=$MIGRATION_DOMAIN"
+            exit 1
+          fi
           echo "Applying domain migration for: $PRIMARY_DOMAIN"
-          sed "s/__PRIMARY_DOMAIN__/$PRIMARY_DOMAIN/g" migration.sql > /tmp/migration-resolved.sql
-          npx wrangler@latest d1 execute maail_portal --file=/tmp/migration-resolved.sql --remote
+          npx wrangler@latest d1 execute maail_portal --file=./migration.sql --remote
 
       - name: Deploy Worker
         env:
